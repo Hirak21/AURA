@@ -1,0 +1,22 @@
+node_modules/
+.next/
+out/
+build/
+
+# SQLite database, WAL sidecars and local backups
+data/
+!data/.gitkeep
+*.db
+*.db-wal
+*.db-shm
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Tooling
+*.tsbuildinfo
+.DS_Store
+npm-debug.log*
