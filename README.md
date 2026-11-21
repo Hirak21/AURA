@@ -203,4 +203,3 @@ Copy [`.env.example`](.env.example) to `.env.production` and `chmod 600` it. No 
 
 Product, design and implementation for AURA. Brand artwork: supplied AURA Authentic Brand Kit v1.1 (Automation & Robotics Association, Guwahati University), used unmodified. Typefaces: Inter, JetBrains Mono (SIL Open Font License). Icons: Lucide (ISC).
 # AURA
-# AURA
