@@ -48,7 +48,7 @@ export function AppShell({
         </aside>
 
         <div className="min-w-0 flex-1">
-          <div className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur lg:hidden">
+          <div className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/80 lg:hidden">
             <div className="flex h-14 items-center justify-between px-4">
               <Wordmark />
               <form action={signOut}>
@@ -57,14 +57,17 @@ export function AppShell({
                 </button>
               </form>
             </div>
-            <MobileTabs isStaff={isStaff} isAdmin={isAdmin} />
           </div>
 
-          <main id="main" className="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <main id="main" className="px-4 pb-28 pt-6 sm:px-6 lg:px-8 lg:pb-8 lg:pt-8">
             {children}
           </main>
         </div>
       </div>
+
+      {/* Outside the blurred sticky header: a filter ancestor would make
+          `position: fixed` resolve against the header instead of the viewport. */}
+      <MobileTabs isStaff={isStaff} isAdmin={isAdmin} />
     </div>
   );
 }

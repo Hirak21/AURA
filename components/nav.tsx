@@ -111,19 +111,25 @@ export function MobileTabs({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: bo
     ? [...STUDENT_NAV.slice(0, 4), ...(isAdmin ? ADMIN_NAV : MENTOR_NAV)]
     : STUDENT_NAV;
   return (
-    <nav aria-label="Workspace" className="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-t border-white/20 tutor-scroll flex gap-1 overflow-x-auto px-3 pb-2">
-      {items.map(({ href, label }) => {
+    <nav
+      aria-label="Workspace"
+      className="fixed inset-x-0 bottom-0 z-50 flex gap-1 overflow-x-auto border-t border-white/15 bg-night/95 px-3 pt-2 shadow-[0_-10px_40px_-12px_rgba(0,0,0,0.35)] backdrop-blur-2xl [scrollbar-color:rgba(255,255,255,0.25)_transparent] supports-[backdrop-filter]:bg-night/75 lg:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+    >
+      {items.map(({ href, label, icon: Icon }) => {
         const active = isActivePath(pathname, href);
         return (
           <Link
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`whitespace-nowrap rounded-full px-3 py-1.5 text-[12.5px] ${
-              active ? "bg-ink text-paper" : "text-strong"
+            className={`flex h-11 min-w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-[11px] font-medium transition-colors duration-150 active:scale-[0.98] ${
+              active
+                ? "bg-white text-ink shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
+                : "text-white/70 hover:bg-white/10 hover:text-white"
             }`}
           >
-            {label}
+            <Icon size={17} strokeWidth={1.8} aria-hidden />
+            <span className="whitespace-nowrap">{label}</span>
           </Link>
         );
       })}
