@@ -113,7 +113,7 @@ export function MobileTabs({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: bo
   return (
     <nav
       aria-label="Workspace"
-      className="fixed inset-x-0 bottom-0 z-50 flex gap-1 overflow-x-auto border-t border-white/15 bg-night/95 px-3 pt-2 shadow-[0_-10px_40px_-12px_rgba(0,0,0,0.35)] backdrop-blur-2xl [scrollbar-color:rgba(255,255,255,0.25)_transparent] supports-[backdrop-filter]:bg-night/75 lg:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-50 flex gap-1 overflow-x-auto overflow-y-visible border-t border-white/15 bg-white/10 backdrop-blur-lg border-white/20 lg:hidden pb-[max(0.5rem,env(safe-area-inset-bottom))]"
     >
       {items.slice(0, 4).map(({ href, label, icon: Icon }) => {
         const active = isActivePath(pathname, href);
@@ -135,8 +135,8 @@ export function MobileTabs({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: bo
       })}
       {/* More button */}
       {items.length > 4 && (
-        <details className="relative">
-          <summary className="flex h-11 min-w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-[11px] font-medium text-white/70 hover:bg-white/10 hover:text-white cursor-pointer">
+        <details className="relative z-20">
+          <summary className="flex h-11 min-w-11 shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-3 text-[11px] font-medium bg-white/10 backdrop-blur-lg border border-white/20 text-ink hover:bg-white/20 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
             </svg>
