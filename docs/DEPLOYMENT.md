@@ -88,6 +88,17 @@ npm run user:create -- --email you@gu.ac.in --name "Your Name" --role admin
 
 `user:create` prints a generated password once. Save it in a password manager. Add other staff with the appropriate roles (`mentor`, `reviewer`, `curator`, `organizer`, `liaison`, `custodian`, `admin`). Students can also be created this way until an institutional identity provider is connected.
 
+### Invite-only student signup
+
+Students can register themselves at `/signup` with a code issued by an admin. Codes are stored only as SHA-256 digests, are single-use by default, expire after 7 days unless changed, and always create a `student` account — never a staff or admin role.
+
+```bash
+npm run invite:create -- --email student@example.edu --days 7 --label "Workshop A"
+npm run invite:list                      # metadata only — codes cannot be recovered
+```
+
+The plaintext code is printed **once**. Send it to the student over a separate channel. Options: `--uses N` (1–100), `--days N` (1–365), `--email` (restrict to one address), `--label`, `--created-by <admin-email>`. Existing accounts are never overwritten, and a failed redemption does not consume the code. Registration is rate-limited per IP.
+
 Only use `npm run db:init` when you intentionally want the **demo dataset** (fictional accounts, seeded content). It deletes and recreates the database.
 
 Build and smoke-test:
