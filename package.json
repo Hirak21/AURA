@@ -8,6 +8,7 @@
     "start": "next start -H ${HOST:-127.0.0.1} -p ${PORT:-3000}",
     "db:init": "tsx scripts/init-db.ts",
     "db:migrate": "tsx scripts/migrate-db.ts",
+    "db:seed-catalog": "tsx scripts/seed-catalog.ts",
     "db:reset": "tsx scripts/reset-demo.ts",
     "db:backup": "tsx scripts/backup-db.ts",
     "db:maintain": "tsx scripts/maintain-db.ts",

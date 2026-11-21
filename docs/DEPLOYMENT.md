@@ -83,6 +83,7 @@ AURA_TRUST_PROXY=true
 cd ~/aura/app
 npm ci
 npm run db:migrate          # schema only — no demo rows
+npm run db:seed-catalog     # learning content, without wiping accounts
 npm run user:create -- --email you@gu.ac.in --name "Your Name" --role admin
 ```
 
@@ -99,7 +100,9 @@ npm run invite:list                      # metadata only — codes cannot be rec
 
 The plaintext code is printed **once**. Send it to the student over a separate channel. Options: `--uses N` (1–100), `--days N` (1–365), `--email` (restrict to one address), `--label`, `--created-by <admin-email>`. Existing accounts are never overwritten, and a failed redemption does not consume the code. Registration is rate-limited per IP.
 
-Only use `npm run db:init` when you intentionally want the **demo dataset** (fictional accounts, seeded content). It deletes and recreates the database.
+`db:seed-catalog` is non-destructive: it fills subjects, topics, resources, questions, challenges, events and inventory, and attributes its sample activity to the real accounts you have already created. It is a no-op if topics already exist. **Do not skip it** — with an empty catalogue the learner overview has nothing to recommend and returns HTTP 500.
+
+Only use `npm run db:init` when you intentionally want the **demo dataset** (fictional accounts, seeded content). It deletes and recreates the database, including all real accounts and invites.
 
 Build and smoke-test:
 
