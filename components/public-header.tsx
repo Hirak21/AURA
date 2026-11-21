@@ -14,7 +14,7 @@ const NAV = [
 export async function PublicHeader() {
   const user = await getCurrentUser();
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-paper/95 backdrop-blur supports-[backdrop-filter]:bg-paper/80">
+    <header className="sticky top-0 z-40 border-b border-white/20 bg-white/10 backdrop-blur-lg supports-[backdrop-filter]:bg-white/10">
       <div className="mx-auto flex h-16 max-w-public items-center gap-6 px-5 lg:px-8">
         <Wordmark />
         <span aria-hidden className="hidden h-4 w-px bg-line lg:block" />
@@ -36,7 +36,7 @@ export async function PublicHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {user ? (
-            <LinkButton href="/app" size="sm">
+            <LinkButton href="/app" size="sm" variant="glass">
               Open workspace
             </LinkButton>
           ) : (
@@ -44,7 +44,7 @@ export async function PublicHeader() {
               <Link href="/login" className="rounded-full px-3 py-1.5 text-[13.5px] text-strong hover:text-ink">
                 Sign in
               </Link>
-              <LinkButton href="/learn" size="sm" className="hidden sm:inline-flex">
+              <LinkButton href="/learn" size="sm" className="hidden sm:inline-flex" variant="glass">
                 Start learning
               </LinkButton>
             </>
