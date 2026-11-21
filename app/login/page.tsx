@@ -14,7 +14,9 @@ export default async function LoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const destination = next && next.startsWith("/") && !next.startsWith("//") ? next : "/app";
+  // Omit `next` unless explicitly requested so the action can choose the
+  // role-appropriate dashboard (admin → /admin, staff → /mentor, else /app).
+  const destination = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-6xl flex-col px-5 py-8 lg:px-8">
@@ -97,7 +99,7 @@ export default async function LoginPage({
                         </div>
                         <form action={signInAs}>
                           <input type="hidden" name="userId" value={u.id} />
-                          <input type="hidden" name="next" value={destination} />
+                          {destination ? <input type="hidden" name="next" value={destination} /> : null}
                           <Button size="sm" variant="secondary" type="submit">
                             Enter <ArrowRight size={13} aria-hidden />
                           </Button>

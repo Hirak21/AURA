@@ -142,6 +142,19 @@ export function hasRole(user: SessionUser | null, ...roles: Role[]): boolean {
   return roles.some((r) => user.roles.includes(r));
 }
 
+/**
+ * Default post-sign-in destination when the caller did not request `next`.
+ * Keeps the walkthrough truthful: admins land in Core OS, staff in Mentor,
+ * everyone else in the learner workspace. An explicit `next` always wins.
+ */
+export function defaultLanding(roles: readonly string[]): string {
+  const admin: readonly Role[] = ["admin", "curator", "liaison", "organizer", "custodian"];
+  const staff: readonly Role[] = ["mentor", "reviewer"];
+  if (admin.some((role) => roles.includes(role))) return "/admin";
+  if (staff.some((role) => roles.includes(role))) return "/mentor";
+  return "/app";
+}
+
 export function canAccessWorkspace(user: SessionUser | null): boolean {
   return hasRole(user, "mentor", "reviewer", "admin", "curator", "liaison", "organizer", "custodian");
 }

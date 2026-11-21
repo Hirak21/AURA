@@ -8,6 +8,7 @@ import {
   DEMO_MODE,
   DEMO_USERS,
   createSession,
+  defaultLanding,
   destroySession,
 } from "@/lib/auth";
 import { redeemInvite } from "@/lib/invites";
@@ -23,6 +24,20 @@ function safeNext(value: string): string {
   return value.startsWith("/") && !value.startsWith("//") ? value : "/app";
 }
 
+function rolesFor(userId: string): string[] {
+  return db
+    .select({ role: schema.userRoles.role })
+    .from(schema.userRoles)
+    .where(eq(schema.userRoles.userId, userId))
+    .all()
+    .map((row) => row.role);
+}
+
+function landingAfterSignIn(formData: FormData, userId: string): string {
+  const requested = formData.get("next");
+  return requested ? safeNext(String(requested)) : defaultLanding(rolesFor(userId));
+}
+
 /**
  * Demo identity switch. Only available when AURA_DEMO_MODE is on; a production
  * deployment leaves it off so a cookie cannot be minted from a public page.
@@ -30,21 +45,19 @@ function safeNext(value: string): string {
 export async function signInAs(formData: FormData) {
   if (!DEMO_MODE) throw new Error("Demo sign-in is disabled on this deployment.");
   const userId = String(formData.get("userId") ?? "");
-  const next = safeNext(String(formData.get("next") ?? "/app"));
   if (!ALLOWED_DEMO.has(userId)) throw new Error("Unknown demo account.");
 
   const user = db.select().from(schema.users).where(eq(schema.users.id, userId)).all()[0];
   if (!user || user.status !== "active") throw new Error("This account is not available.");
 
   await createSession(userId);
-  redirect(next);
+  redirect(landingAfterSignIn(formData, userId));
 }
 
 /** Email + password sign-in. The production path. */
 export async function signInWithPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
-  const next = safeNext(String(formData.get("next") ?? "/app"));
 
   if (!email || !password) return { error: "Enter your email address and password." };
   if (password.length > 200) return { error: "Email or password is incorrect." };
@@ -69,7 +82,7 @@ export async function signInWithPassword(_prev: AuthState, formData: FormData): 
   }
 
   await createSession(user.id);
-  redirect(next);
+  redirect(landingAfterSignIn(formData, user.id));
 }
 
 /** Invite-only registration. Never creates staff/admin accounts. */

@@ -5,12 +5,12 @@ import { ArrowRight } from "lucide-react";
 import { signInWithPassword, type AuthState } from "@/actions/session";
 import { Button, FieldError, Input, Label } from "./ui";
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({ next }: { next?: string }) {
   const [state, formAction, pending] = useActionState<AuthState, FormData>(signInWithPassword, {});
 
   return (
     <form action={formAction} className="space-y-4">
-      <input type="hidden" name="next" value={next} />
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <div>
         <Label htmlFor="email" required>
           Email address
