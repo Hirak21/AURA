@@ -72,7 +72,7 @@ export default async function StudentOverview() {
   const exploredCount = Object.values(states).filter((s) => s !== "not_started").length;
 
   return (
-    <div className="max-w-[1080px]">
+    <div className="max-w-[1080px] mx-auto px-4 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="eyebrow">Overview</p>
