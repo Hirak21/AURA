@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { getTopic, getQuestions, getChallengeForTopic, getTutorMessages, safeJson } from "@/lib/services/catalog";
 import { TutorPanel, type PersistedTurn } from "@/components/tutor-panel";
 import { LevelHeader } from "@/components/level-header";
+import { AiAssist } from "@/components/ai-assist";
 
 export async function generateMetadata({ params }: { params: Promise<{ topicId: string }> }) {
   const { topicId } = await params;
@@ -56,6 +57,8 @@ export default async function TutorTopicPage({ params }: { params: Promise<{ top
           hasChallenge={!!challenge}
         />
       </div>
+
+      <AiAssist topicId={topic.id} />
     </div>
   );
 }
