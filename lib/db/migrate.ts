@@ -45,6 +45,20 @@ export function migrate(sqlite: Database) {
     PRIMARY KEY (user_id, role)
   );
 
+  CREATE TABLE IF NOT EXISTS invites (
+    id TEXT PRIMARY KEY,
+    code_hash TEXT NOT NULL UNIQUE,
+    label TEXT NOT NULL DEFAULT '',
+    email TEXT,
+    max_uses INTEGER NOT NULL DEFAULT 1,
+    uses INTEGER NOT NULL DEFAULT 0,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT,
+    created_by TEXT REFERENCES users(id),
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS invite_code_idx ON invites(code_hash);
+
   CREATE TABLE IF NOT EXISTS subjects (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
@@ -313,5 +327,5 @@ export function migrate(sqlite: Database) {
 
   sqlite
     .prepare("INSERT INTO schema_meta (key, value) VALUES ('schema_version', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
-    .run("3.1.0");
+    .run("3.2.0");
 }

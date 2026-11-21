@@ -111,7 +111,7 @@ export function MobileTabs({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: bo
     ? [...STUDENT_NAV.slice(0, 4), ...(isAdmin ? ADMIN_NAV : MENTOR_NAV)]
     : STUDENT_NAV;
   return (
-    <nav aria-label="Workspace" className="tutor-scroll flex gap-1 overflow-x-auto px-3 pb-2">
+    <nav aria-label="Workspace" className="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-t border-white/20 tutor-scroll flex gap-1 overflow-x-auto px-3 pb-2">
       {items.map(({ href, label }) => {
         const active = isActivePath(pathname, href);
         return (

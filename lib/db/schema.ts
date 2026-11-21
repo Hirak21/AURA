@@ -48,6 +48,29 @@ export const userRoles = sqliteTable(
   (t) => ({ pk: primaryKey({ columns: [t.userId, t.role] }) }),
 );
 
+/**
+ * Invite-only registration. Only a SHA-256 digest of the code is stored, so a
+ * database leak cannot be replayed to create accounts. Redemption is capped by
+ * `maxUses`, `expiresAt`, an optional email binding, and `revokedAt`.
+ */
+export const invites = sqliteTable(
+  "invites",
+  {
+    id: text("id").primaryKey(),
+    codeHash: text("code_hash").notNull().unique(),
+    label: text("label").notNull().default(""),
+    /** When set, only this address may redeem the code. */
+    email: text("email"),
+    maxUses: integer("max_uses").notNull().default(1),
+    uses: integer("uses").notNull().default(0),
+    expiresAt: text("expires_at").notNull(),
+    revokedAt: text("revoked_at"),
+    createdBy: text("created_by").references(() => users.id),
+    createdAt: text("created_at").notNull(),
+  },
+  (t) => ({ codeIdx: index("invite_code_idx").on(t.codeHash) }),
+);
+
 /* Learning catalogue */
 export const subjects = sqliteTable("subjects", {
   id: text("id").primaryKey(),

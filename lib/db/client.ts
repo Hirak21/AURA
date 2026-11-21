@@ -28,12 +28,17 @@ function ensureDir() {
   if (!fs.existsSync(DB_DIR_RESOLVED)) fs.mkdirSync(DB_DIR_RESOLVED, { recursive: true });
 }
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __auraDb__: ReturnType<typeof createDb> | undefined;
+interface AuraConnection {
+  sqlite: Database.Database;
+  db: ReturnType<typeof drizzle<typeof schema>>;
 }
 
-function createDb() {
+declare global {
+  // eslint-disable-next-line no-var
+  var __auraDb__: AuraConnection | undefined;
+}
+
+function createDb(): AuraConnection {
   ensureDir();
   const sqlite = new Database(dbPath);
   sqlite.pragma("journal_mode = WAL");
@@ -44,9 +49,17 @@ function createDb() {
   sqlite.pragma("temp_store = MEMORY");
   // Idempotent: creates missing tables/columns and records schema_version.
   migrate(sqlite);
-  return drizzle(sqlite, { schema });
+  return { sqlite, db: drizzle(sqlite, { schema }) };
 }
 
-export const db = global.__auraDb__ ?? (global.__auraDb__ = createDb());
+const connection = global.__auraDb__ ?? (global.__auraDb__ = createDb());
+
+/** Drizzle handle for normal queries. */
+export const db = connection.db;
+/**
+ * Raw better-sqlite3 handle. Used only by the invite redemption transaction,
+ * which needs a conditional single-statement claim to be race-free.
+ */
+export const sqlite = connection.sqlite;
 export { schema };
-export type DB = ReturnType<typeof createDb>;
+export type DB = AuraConnection["db"];

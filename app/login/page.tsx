@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { DEMO_MODE, DEMO_USERS } from "@/lib/auth";
 import { signInAs } from "@/actions/session";
 import { Card, Button, LinkButton, DemoBadge } from "@/components/ui";
@@ -109,7 +110,11 @@ export default async function LoginPage({
             </Card>
           ) : (
             <p className="px-1 text-[12px] leading-relaxed text-mid">
-              Need an account? Ask your AURA coordinator to create one with the institution email address.
+              Have an invite code?{" "}
+              <Link href="/signup" className="font-medium text-ink underline underline-offset-4">
+                Create your account
+              </Link>
+              . Otherwise ask your AURA coordinator for an invite.
             </p>
           )}
         </div>

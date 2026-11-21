@@ -3,13 +3,14 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
-import { db, schema } from "@/lib/db/client";
+import { db, schema, sqlite } from "@/lib/db/client";
 import {
   DEMO_MODE,
   DEMO_USERS,
   createSession,
   destroySession,
 } from "@/lib/auth";
+import { redeemInvite } from "@/lib/invites";
 import { verifyPassword } from "@/lib/security/password";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
@@ -69,6 +70,32 @@ export async function signInWithPassword(_prev: AuthState, formData: FormData): 
 
   await createSession(user.id);
   redirect(next);
+}
+
+/** Invite-only registration. Never creates staff/admin accounts. */
+export async function registerWithInvite(
+  _prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const requestHeaders = await headers();
+  const ip = clientIp(requestHeaders);
+  const limit = rateLimit(`signup:ip:${ip}`, 10, 15 * 60 * 1000);
+  if (!limit.ok) {
+    return { error: "Too many registration attempts. Wait a few minutes and try again." };
+  }
+
+  const result = redeemInvite(sqlite, {
+    code: String(formData.get("code") ?? ""),
+    name: String(formData.get("name") ?? ""),
+    email: String(formData.get("email") ?? ""),
+    password: String(formData.get("password") ?? ""),
+    confirm: String(formData.get("confirm") ?? ""),
+  });
+
+  if (!result.ok) return { error: result.error };
+
+  await createSession(result.userId);
+  redirect("/app");
 }
 
 export async function signOut() {

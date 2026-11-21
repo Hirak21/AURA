@@ -12,6 +12,8 @@
     "db:backup": "tsx scripts/backup-db.ts",
     "db:maintain": "tsx scripts/maintain-db.ts",
     "user:create": "tsx scripts/create-user.ts",
+    "invite:create": "tsx scripts/create-invite.ts",
+    "invite:list": "tsx scripts/list-invites.ts",
     "test": "tsx --test tests/*.test.ts",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test"
