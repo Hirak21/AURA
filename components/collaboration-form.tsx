@@ -1,5 +1,4 @@
-// This component is now a server component to enable progressive enhancement without JavaScript.
-
+"use client";
 
 import { useActionState } from "react";
 import Link from "next/link";
