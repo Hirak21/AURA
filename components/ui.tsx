@@ -2,7 +2,7 @@ import * as React from "react";
 import clsx from "clsx";
 
 /* ============ Button ============ */
-type ButtonVariant = "primary" | "secondary" | "tertiary" | "destructive";
+type ButtonVariant = "primary" | "secondary" | "tertiary" | "destructive" | "glass";
 type ButtonSize = "sm" | "md" | "lg";
 
 export const buttonClasses = (variant: ButtonVariant = "primary", size: ButtonSize = "md") =>
@@ -14,6 +14,7 @@ export const buttonClasses = (variant: ButtonVariant = "primary", size: ButtonSi
     size === "lg" && "h-12 px-6 text-[15px]",
     variant === "primary" && "bg-ink text-paper hover:bg-black active:bg-black",
     variant === "secondary" && "border border-ink bg-paper text-ink hover:bg-mist active:bg-cloud",
+    variant === "glass" && "bg-white/10 backdrop-blur-lg border border-white/20 text-ink hover:bg-white/20",
     variant === "tertiary" && "text-ink underline-offset-4 hover:underline",
     variant === "destructive" && "border border-ink bg-paper text-ink hover:bg-cloud",
   );
