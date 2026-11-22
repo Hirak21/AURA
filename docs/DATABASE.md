@@ -34,7 +34,7 @@ The path is absolute (`AURA_DB_PATH`), so a systemd working-directory change can
 2. **Local disk.** Do not put the database on NFS, SMB, or a network filesystem. SQLite locking is not reliable there.
 3. **Writable state outside the release directory.** Use `AURA_DB_PATH=/home/aagomon/aura/shared/data/aura.db` so `git pull` / `npm ci` / rebuilds never touch it.
 4. **Back up with the backup API, not `cp`.** Copying a live WAL database can capture a torn state. `npm run db:backup` takes a consistent snapshot while the app runs.
-5. **Migrate forward only.** `migrate()` is idempotent and runs on boot; `schema_meta.schema_version` records the current version. Take a snapshot before each deploy.
+5. **Migrate forward only.** `migrate()` is idempotent and runs on boot; `schema_meta.schema_version` records the current version (`3.2.0`, which adds the operator-only `demo_seed_meta` manifest table). Take a snapshot before each deploy.
 6. **Restrict permissions.** The database directory should be `700` and owned by `aagomon`; `.env.production` should be `600`.
 
 ---

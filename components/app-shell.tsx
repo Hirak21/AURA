@@ -17,9 +17,11 @@ export function AppShell({
   const initials = user.displayName.split(" ").map((p) => p[0]).join("").slice(0, 2);
 
   return (
-    <div className="min-h-dvh bg-paper">
+    <div className="min-h-dvh bg-[linear-gradient(115deg,#f4f4f5_0%,#fafafa_18%,#ffffff_38%)]">
       <div className="mx-auto flex max-w-workspace">
-        <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-line px-3 py-5 lg:flex">
+        <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 flex-col border-r border-white/40 bg-white/55 px-3 py-5 shadow-[4px_0_24px_rgba(0,0,0,0.04)] backdrop-blur-lg supports-[backdrop-filter]:bg-white/55 lg:flex">
+          {/* Crisp 1px edge highlight so the glass plate reads against the pale canvas. */}
+          <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-black/[0.07] to-transparent" />
           <div className="px-3 pb-6">
             <Wordmark />
             <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-mid">

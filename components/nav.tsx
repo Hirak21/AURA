@@ -84,7 +84,7 @@ function Group({
   if (visible.length === 0) return null;
   return (
     <div className="mb-6">
-      <p className="mb-2 px-3 font-mono text-[10px] uppercase tracking-[0.14em] text-mid">{title}</p>
+      <p className="mb-2 px-3 font-mono text-[10px] uppercase tracking-[0.14em] text-strong">{title}</p>
       <ul className="space-y-0.5">
         {visible.map(({ href, label, icon: Icon }) => {
           const active = isActivePath(pathname, href);
@@ -94,7 +94,9 @@ function Group({
                 href={href}
                 aria-current={active ? "page" : undefined}
                 className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] transition-colors ${
-                  active ? "bg-white/10 backdrop-blur-lg border border-white/20 text-ink" : "text-strong hover:bg-mist hover:text-ink"
+                  active
+                    ? "bg-ink font-medium text-paper shadow-[0_1px_2px_rgba(0,0,0,0.18)]"
+                    : "text-strong hover:bg-white/70 hover:text-ink"
                 }`}
               >
                 <Icon size={15} strokeWidth={1.8} aria-hidden />

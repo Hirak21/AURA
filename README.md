@@ -9,7 +9,7 @@ AURA is one product with two connected layers:
 
 Built for the **education** problem statement: *students struggle to understand complex topics and to find resources that match their level.* It is the learning and innovation workspace of the **Automation & Robotics Association, Guwahati University**.
 
-> **Data notice.** Seeded people, schools, events and inventory are fictional and labelled as demo data throughout the app. There is **no live AI model connected** — the tutor is a deterministic, curated Demo Tutor and says so on every response. Authentication is real (scrypt password hashing + server-side sessions); the demo identity picker is opt-in via `AURA_DEMO_MODE` and is off by default in production.
+> **Data notice.** Seeded people, schools, events and inventory are fictional and labelled as demo data throughout the app. There is **no live AI model connected** — the tutor is a deterministic, curated Demo Tutor and says so on every response. Authentication is real (scrypt password hashing + server-side sessions); the demo identity picker is opt-in via `AURA_DEMO_MODE` and is off by default in production. A separate, manifest-scoped demo activity layer can be added to a deployed instance only through an explicitly approved dry-run/apply workflow — see [docs/PRODUCTION_DEMO_SEED.md](docs/PRODUCTION_DEMO_SEED.md).
 
 ---
 
@@ -24,10 +24,13 @@ npm run dev           # http://localhost:3000
 Then open `/login` and sign in with a demo account. The seeded demo password is `aura-demo-2026` (change `AURA_SEED_PASSWORD` before running `db:init` if the instance is public).
 
 ```bash
-npm test              # 63 tests: grading, adaptation, integrity, navigation, security, structural guards
+npm test              # 71 tests: grading, adaptation, integrity, navigation, security, demo seed, structural guards
 npm run typecheck
 npm run build && npm start
-npm run db:reset      # wipe + reseed (do this before a demo; seed dates are relative to now)
+npm run db:reset      # wipe + reseed (local/disposable DB only — never in production)
+npm run demo:seed     # dry-run the opt-in production demo activity layer
+npm run demo:verify   # read-only verification of that layer
+npm run demo:remove   # dry-run scoped removal of that layer
 npm run user:create -- --email you@gu.ac.in --name "Your Name" --role admin
 npm run db:backup     # consistent online snapshot
 npm run db:seed-catalog # publish catalogue content without touching user accounts
@@ -126,6 +129,7 @@ Full detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 [`docs/QA.md`](docs/QA.md) | Verification matrix — what passed, what was **not** tested, known limitations |
 [`docs/DEMO-SCRIPT.md`](docs/DEMO-SCRIPT.md) | Click-by-click 4-minute judge demo, plus Q&A handling |
 [`docs/SEED-DATA.md`](docs/SEED-DATA.md) | Every seeded record and why it exists |
+[`docs/PRODUCTION_DEMO_SEED.md`](docs/PRODUCTION_DEMO_SEED.md) | **Opt-in production demo data** — audit, dry-run, approval, verification, scoped removal |
 [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decision log with rejected alternatives |
 
 ---
@@ -150,7 +154,7 @@ lib/security/           scrypt password + session-token hashing
 lib/tutor/              Demo Tutor provider
 tests/                  unit, integration and structural tests
 docs/                   the documentation set above
-scripts/                init/migrate/reset/backup/maintain/create-user
+scripts/                init/migrate/reset/backup/maintain/create-user + opt-in demo seed/verify/remove
 public/brand/           supplied SVG logos and social image (unmodified)
 data/aura.db            the database (generated; not source)
 ```
@@ -172,6 +176,7 @@ data/aura.db            the database (generated; not source)
 `AURA_COOKIE_SECURE` | prod: on | `Secure` flag on the session cookie |
 `AURA_TRUST_PROXY` | `true` | Trust `X-Forwarded-For` from the reverse proxy |
 `AURA_SEED_PASSWORD` | `aura-demo-2026` | Password for demo accounts created by `db:init` |
+`AURA_DEMO_AS_OF` | now | Optional fixed timestamp anchor for deterministic demo seeding |
 `AURA_NEW_USER_PASSWORD` | — | Optional password for `user:create` |
 
 Copy [`.env.example`](.env.example) to `.env.production` and `chmod 600` it. No third-party API keys are required.
@@ -183,7 +188,7 @@ Copy [`.env.example`](.env.example) to `.env.production` and `chmod 600` it. No 
 1. **No live AI.** The tutor is deterministic and curated for 7 topics; other topics are refused honestly rather than improvised.
 2. **No institutional SSO yet.** Email + password with scrypt hashing and server-side sessions is the production path; an IdP can be added without changing authorization rules.
 3. **SQLite, single instance.** Production-safe on one VPS with WAL and backups, but not for multiple app servers — see `docs/DATABASE.md`.
-4. **Content authoring is read-only** in the UI — edit `lib/db/seed.ts` and run `npm run db:reset`.
+4. **Content authoring is read-only** in the UI — edit `lib/db/seed.ts` and run `npm run db:reset` on a local/disposable database. Production demo activity uses the separate, non-destructive workflow in [docs/PRODUCTION_DEMO_SEED.md](docs/PRODUCTION_DEMO_SEED.md), never `db:reset`.
 5. **Mentor assignments are seeded**, not editable in the UI.
 6. **No file uploads** — evidence is a validated URL, shown but never fetched.
 7. **No email is sent**; confirmations are on-screen only.

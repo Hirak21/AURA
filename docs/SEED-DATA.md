@@ -3,6 +3,8 @@
 **File:** `lib/db/seed.ts` · **Reset:** `npm run db:reset`
 Everything here is fictional and labelled as demo in the UI. Dates are generated relative to seed time so a demo never looks stale.
 
+> **Production note.** This file documents the baseline database created by `db:init` / `db:reset`. For the separate, additive demo activity layer used on a deployed instance, see [PRODUCTION_DEMO_SEED.md](PRODUCTION_DEMO_SEED.md). That workflow never resets the database and is dry-run by default.
+
 ---
 
 ## People (7)

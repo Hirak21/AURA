@@ -39,6 +39,17 @@ export const sessions = sqliteTable(
   }),
 );
 
+/**
+ * Operator-only manifest for the opt-in production demo dataset. The app never
+ * writes this table; scripts/seed-demo-data.ts records exactly which rows it
+ * added so verification and removal can stay scoped to demo data.
+ */
+export const demoSeedMeta = sqliteTable("demo_seed_meta", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  createdAt: text("created_at").notNull(),
+});
+
 export const userRoles = sqliteTable(
   "user_roles",
   {

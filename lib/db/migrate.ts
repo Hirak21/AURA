@@ -39,6 +39,14 @@ export function migrate(sqlite: Database) {
     value TEXT NOT NULL
   );
 
+  -- Audit trail for the opt-in production demo dataset. Created on every boot;
+  -- never written by the application, only by scripts/seed-demo-data.ts.
+  CREATE TABLE IF NOT EXISTS demo_seed_meta (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS user_roles (
     user_id TEXT NOT NULL REFERENCES users(id),
     role TEXT NOT NULL,
