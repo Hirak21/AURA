@@ -191,11 +191,30 @@ function MobileMoreMenu({ items, pathname }: { items: NavItem[]; pathname: strin
   );
 }
 
+/**
+ * On mobile the four visible tabs follow the workspace the user is actually
+ * in: an admin on /admin sees admin destinations first, a mentor on /mentor
+ * sees mentor destinations first, and the student workspace is the default.
+ * Ordering only changes — every link stays reachable, with no duplicates.
+ */
+export function tabsFor(pathname: string, isStaff: boolean, isAdmin: boolean): NavItem[] {
+  const context: NavItem[] = pathname.startsWith("/admin") && isAdmin
+    ? ADMIN_NAV
+    : pathname.startsWith("/mentor") && isStaff
+      ? MENTOR_NAV
+      : [];
+  const other = isAdmin ? ADMIN_NAV : isStaff ? MENTOR_NAV : [];
+  const seen = new Set<string>();
+  return [...context, ...STUDENT_NAV, ...other].filter((item) => {
+    if (seen.has(item.href)) return false;
+    seen.add(item.href);
+    return true;
+  });
+}
+
 export function MobileTabs({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: boolean }) {
   const pathname = usePathname();
-  const items = isStaff
-    ? [...STUDENT_NAV.slice(0, 4), ...(isAdmin ? ADMIN_NAV : MENTOR_NAV)]
-    : STUDENT_NAV;
+  const items = tabsFor(pathname, isStaff, isAdmin);
   const primary = items.slice(0, 4);
   const overflow = items.slice(4);
 

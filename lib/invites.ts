@@ -89,26 +89,47 @@ export function redeemInvite(sqlite: Database, input: SignupInput): RedeemResult
   const name = input.name.trim().replace(/\s+/g, " ");
   const codeHash = hashInviteCode(normalizeInviteCode(input.code));
   const now = new Date().toISOString();
-  // scrypt is deliberately done before the write transaction to keep the
-  // writer lock short.
-  const passwordHash = hashPassword(input.password);
+
+  // Cheap validation first: scrypt is expensive and synchronous, so never run
+  // it for a junk invite code. The authoritative claim still happens inside
+  // the transaction below, so this pre-check cannot be raced into a bypass.
+  const invite = sqlite
+    .prepare(
+      "SELECT id, email, max_uses, uses, expires_at, revoked_at FROM invites WHERE code_hash = ?",
+    )
+    .get(codeHash) as InviteRow | undefined;
+
+  if (!invite || invite.revoked_at || invite.expires_at <= now || invite.uses >= invite.max_uses) {
+    return { ok: false, error: INVALID_CODE };
+  }
+  if (invite.email && invite.email.toLowerCase() !== email) {
+    return { ok: false, error: INVALID_CODE };
+  }
+  const existing = sqlite.prepare("SELECT id FROM users WHERE email = ?").get(email);
+  if (existing) {
+    return { ok: false, error: "An account with this email already exists. Please sign in instead." };
+  }
 
   const tx = sqlite.transaction((): RedeemResult => {
-    const invite = sqlite
+    const current = sqlite
       .prepare(
         "SELECT id, email, max_uses, uses, expires_at, revoked_at FROM invites WHERE code_hash = ?",
       )
       .get(codeHash) as InviteRow | undefined;
 
-    if (!invite) return { ok: false, error: INVALID_CODE };
-    if (invite.revoked_at || invite.expires_at <= now || invite.uses >= invite.max_uses) {
+    if (!current || current.revoked_at || current.expires_at <= now || current.uses >= current.max_uses) {
       return { ok: false, error: INVALID_CODE };
     }
-    if (invite.email && invite.email.toLowerCase() !== email) {
+    if (current.email && current.email.toLowerCase() !== email) {
       return { ok: false, error: INVALID_CODE };
+    }
+    if (sqlite.prepare("SELECT id FROM users WHERE email = ?").get(email)) {
+      return { ok: false, error: "An account with this email already exists. Please sign in instead." };
     }
 
-    const existing = sqlite.prepare("SELECT id FROM users WHERE email = ?").get(email);
+    // scrypt runs only for a valid-looking invite, and inside the transaction
+    // to keep the write atomic. SQLite is single-writer so this cannot race.
+    const passwordHash = hashPassword(input.password);
     if (existing) {
       return { ok: false, error: "An account with this email already exists. Please sign in instead." };
     }
@@ -118,7 +139,7 @@ export function redeemInvite(sqlite: Database, input: SignupInput): RedeemResult
       .prepare(
         "UPDATE invites SET uses = uses + 1 WHERE id = ? AND uses < max_uses AND revoked_at IS NULL AND expires_at > ?",
       )
-      .run(invite.id, now);
+      .run(current.id, now);
     if (claim.changes !== 1) return { ok: false, error: INVALID_CODE };
 
     const userId = `u-${randomUUID()}`;
@@ -132,7 +153,7 @@ export function redeemInvite(sqlite: Database, input: SignupInput): RedeemResult
       .prepare(
         "INSERT INTO audit_events (id, actor_id, action, entity_type, entity_id, metadata_json, created_at) VALUES (?, ?, 'user.registered_with_invite', 'user', ?, ?, ?)",
       )
-      .run(randomUUID(), userId, userId, JSON.stringify({ inviteId: invite.id }), now);
+      .run(randomUUID(), userId, userId, JSON.stringify({ inviteId: current.id }), now);
 
     return { ok: true, userId };
   });

@@ -15,14 +15,11 @@ import { redeemInvite } from "@/lib/invites";
 import { verifyPassword } from "@/lib/security/password";
 import { rateLimit } from "@/lib/rate-limit";
 import { clientIp } from "@/lib/request";
+import { safeNext } from "@/lib/navigation";
 
 export type AuthState = { error?: string };
 
 const ALLOWED_DEMO = new Set(DEMO_USERS.map((u) => u.id as string));
-
-function safeNext(value: string): string {
-  return value.startsWith("/") && !value.startsWith("//") ? value : "/app";
-}
 
 function rolesFor(userId: string): string[] {
   return db

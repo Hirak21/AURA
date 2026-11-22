@@ -1,13 +1,15 @@
 /**
  * Request metadata used for rate limiting and session audit rows.
  *
- * Trusting x-forwarded-for is only safe behind a proxy that overwrites it.
- * docs/DEPLOYMENT.md configures Caddy/Nginx to do exactly that. Set
- * AURA_TRUST_PROXY=false if the app is exposed directly.
+ * Forwarded headers are only trustworthy when a reverse proxy overwrites
+ * them. nginx is configured to set X-Forwarded-For to $remote_addr, so
+ * production opts in with AURA_TRUST_PROXY=true. Direct exposure must leave
+ * it unset: otherwise a client could rotate the header to bypass every
+ * per-IP rate limit.
  */
 
 export function clientIp(headers: Headers): string {
-  const trustProxy = process.env.AURA_TRUST_PROXY !== "false";
+  const trustProxy = process.env.AURA_TRUST_PROXY === "true";
   if (trustProxy) {
     const forwarded = headers.get("x-forwarded-for");
     if (forwarded) return forwarded.split(",")[0]!.trim();

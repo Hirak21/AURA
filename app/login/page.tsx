@@ -4,6 +4,7 @@ import { signInAs } from "@/actions/session";
 import { Card, Button, LinkButton, DemoBadge } from "@/components/ui";
 import { FullLockup, Wordmark } from "@/components/brand";
 import { LoginForm } from "@/components/login-form";
+import { safeNext } from "@/lib/navigation";
 import { ArrowRight, Info } from "lucide-react";
 
 export const metadata = { title: "Sign in" };
@@ -16,7 +17,9 @@ export default async function LoginPage({
   const { next } = await searchParams;
   // Omit `next` unless explicitly requested so the action can choose the
   // role-appropriate dashboard (admin → /admin, staff → /mentor, else /app).
-  const destination = next && next.startsWith("/") && !next.startsWith("//") ? next : undefined;
+  // safeNext() rejects cross-origin, control-character and backslash targets,
+  // returning /app for anything unsafe. Never forward a raw `next` value.
+  const destination = next ? safeNext(next) : undefined;
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-6xl flex-col px-5 py-8 lg:px-8">

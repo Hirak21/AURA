@@ -25,6 +25,16 @@ test("fixed workspace nav is never a scroll container", () => {
   );
 });
 
+test("mobile tabs follow the active workspace", () => {
+  assert.match(source, /pathname\.startsWith\("\/admin"\)/, "admin context must be detected");
+  assert.match(source, /pathname\.startsWith\("\/mentor"\)/, "mentor context must be detected");
+  assert.match(
+    source,
+    /\[\.\.\.context, \.\.\.STUDENT_NAV, \.\.\.other\]/,
+    "the active workspace's links must be ordered first",
+  );
+});
+
 test("More is an accessible stateful disclosure", () => {
   assert.match(source, /type="button"/);
   assert.match(source, /aria-expanded=\{open\}/);

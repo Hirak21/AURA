@@ -19,6 +19,14 @@ const KEYLEN = 64;
 export const PASSWORD_MIN_LENGTH = 10;
 export const PASSWORD_MAX_LENGTH = 200;
 
+/**
+ * Fixed valid hash used as a decoy when an account or stored hash is missing.
+ * Computing a real scrypt against it keeps unknown-account and malformed-hash
+ * responses close in timing to real verification, preventing account
+ * enumeration by measuring the login response.
+ */
+const DUMMY_HASH = hashPassword("aura-dummy-password-never-used");
+
 export function hashPassword(password: string): string {
   if (password.length < PASSWORD_MIN_LENGTH) {
     throw new Error(`Password must be at least ${PASSWORD_MIN_LENGTH} characters.`);
@@ -32,22 +40,29 @@ export function hashPassword(password: string): string {
 }
 
 export function verifyPassword(password: string, stored: string | null | undefined): boolean {
-  if (!stored) return false;
-  const parts = stored.split("$");
-  if (parts.length !== 6 || parts[0] !== "scrypt") return false;
+  const parts = stored?.split("$");
+  const usable =
+    parts?.length === 6 &&
+    parts[0] === "scrypt" &&
+    [parts[1], parts[2], parts[3]].every((v) => Number.isInteger(Number(v)));
 
-  const n = Number(parts[1]);
-  const r = Number(parts[2]);
-  const p = Number(parts[3]);
-  if (!Number.isInteger(n) || !Number.isInteger(r) || !Number.isInteger(p)) return false;
-  // Refuse absurd parameters rather than allocating unbounded memory.
-  if (n > 1_048_576 || r > 32 || p > 16) return false;
+  // Always compute a real scrypt. Unknown accounts, missing hashes and
+  // malformed hashes use the fixed decoy, so response timing does not reveal
+  // whether the email exists. Even a decoy collision can never authenticate.
+  const parsed = usable && parts ? parts : DUMMY_HASH.split("$");
+  const params = parsed.slice(1, 4).map(Number);
+  const [n, r, p] = params;
+  const sane =
+    n! > 0 && n! <= 1_048_576 && r! > 0 && r! <= 32 && p! > 0 && p! <= 16;
+  const source = sane ? parsed : DUMMY_HASH.split("$");
+  const [sn, sr, sp] = source.slice(1, 4).map(Number);
 
   try {
-    const salt = Buffer.from(parts[4], "base64url");
-    const expected = Buffer.from(parts[5], "base64url");
-    const actual = scryptSync(password.normalize("NFKC"), salt, expected.length, { N: n, r, p });
-    return expected.length === actual.length && timingSafeEqual(expected, actual);
+    const salt = Buffer.from(source[4]!, "base64url");
+    const expected = Buffer.from(source[5]!, "base64url");
+    const actual = scryptSync(password.normalize("NFKC"), salt, expected.length, { N: sn!, r: sr!, p: sp! });
+    const matched = expected.length === actual.length && timingSafeEqual(expected, actual);
+    return usable && matched;
   } catch {
     return false;
   }
