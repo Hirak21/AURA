@@ -24,12 +24,13 @@ export default async function PracticePage({
   const topics = listTopics();
   const attempts = getAttempts(user.id);
   const states = getTopicStates(user.id);
-  const { recommendation } = getPrimaryRecommendation(user.id);
+  const primary = getPrimaryRecommendation(user.id);
+  const recommendation = primary?.recommendation;
 
   const topicWithQuestions = topics.filter((t) => getQuestions(t.id).length > 0);
   const selected =
     topicWithQuestions.find((t) => t.id === topicParam) ??
-    topicWithQuestions.find((t) => t.id === recommendation.topicId) ??
+    topicWithQuestions.find((t) => t.id === recommendation?.topicId) ??
     topicWithQuestions[0];
 
   const questions = selected ? getQuestions(selected.id) : [];
@@ -89,7 +90,7 @@ export default async function PracticePage({
                 }`}
               >
                 {t.title}
-                {t.id === recommendation.topicId ? (
+                {t.id === recommendation?.topicId ? (
                   <span className={`ml-1.5 font-mono text-[9.5px] uppercase ${active ? "text-paper/70" : "text-mid"}`}>
                     suggested
                   </span>
@@ -111,17 +112,19 @@ export default async function PracticePage({
           />
 
           <aside className="space-y-4">
-            <Card className="p-4">
-              <p className="eyebrow">Why this topic</p>
-              <p className="mt-2 text-[13px] leading-relaxed text-strong">{recommendation.reason}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {recommendation.evidence.map((e) => (
-                  <span key={e} className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] text-strong">
-                    {e}
-                  </span>
-                ))}
-              </div>
-            </Card>
+            {recommendation ? (
+              <Card className="p-4">
+                <p className="eyebrow">Why this topic</p>
+                <p className="mt-2 text-[13px] leading-relaxed text-strong">{recommendation.reason}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {recommendation.evidence.map((e) => (
+                    <span key={e} className="rounded-full border border-line px-2 py-0.5 font-mono text-[10px] text-strong">
+                      {e}
+                    </span>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
 
             <Card className="p-4">
               <p className="eyebrow">Evidence state</p>

@@ -173,25 +173,3 @@ export async function setLearningGoal(input: z.infer<typeof goalSchema>) {
   revalidatePath("/app/profile");
   return { ok: true as const };
 }
-
-const bookmarkSchema = z.object({ topicId: z.string().min(1) });
-
-export async function toggleBookmark(input: z.infer<typeof bookmarkSchema>) {
-  const user = await requireUser();
-  const { topicId } = parseOrThrow(bookmarkSchema, input);
-  const existing = db
-    .select()
-    .from(schema.bookmarks)
-    .where(and(eq(schema.bookmarks.userId, user.id), eq(schema.bookmarks.topicId, topicId)))
-    .all()[0];
-
-  if (existing) {
-    db.delete(schema.bookmarks)
-      .where(and(eq(schema.bookmarks.userId, user.id), eq(schema.bookmarks.topicId, topicId)))
-      .run();
-  } else {
-    db.insert(schema.bookmarks).values({ userId: user.id, topicId, createdAt: new Date().toISOString() }).run();
-  }
-  revalidatePath("/app/learning");
-  return { ok: true as const, bookmarked: !existing };
-}

@@ -1,4 +1,4 @@
-import { requireRolePage } from "@/lib/auth";
+import { hasRole, requireRolePage } from "@/lib/auth";
 import { db, schema } from "@/lib/db/client";
 import { and, eq } from "drizzle-orm";
 import { Card, SectionTitle, StatusBadge, DemoBadge, DataTable, Th, Td } from "@/components/ui";
@@ -8,7 +8,8 @@ import { listTopics } from "@/lib/services/catalog";
 export const metadata = { title: "Admin · Events" };
 
 export default async function AdminEventsPage() {
-  await requireRolePage("organizer", "admin", "curator");
+  const user = await requireRolePage("organizer", "admin", "curator");
+  const canCreateEvents = hasRole(user, "organizer", "admin");
   const events = db.select().from(schema.events).all().sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const topics = listTopics();
   const users = db.select().from(schema.users).all();
@@ -92,11 +93,13 @@ export default async function AdminEventsPage() {
           </div>
         </div>
 
-        <div>
-          <SectionTitle eyebrow="Publish" title="Create an event" />
-          <EventComposer topics={topics.map((t) => ({ id: t.id, title: t.title }))} />
-          <div className="mt-3"><DemoBadge>New events are demo records</DemoBadge></div>
-        </div>
+        {canCreateEvents ? (
+          <div>
+            <SectionTitle eyebrow="Publish" title="Create an event" />
+            <EventComposer topics={topics.map((t) => ({ id: t.id, title: t.title }))} />
+            <div className="mt-3"><DemoBadge>New events are demo records</DemoBadge></div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

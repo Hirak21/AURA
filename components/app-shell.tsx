@@ -27,7 +27,7 @@ export function AppShell({
             </p>
           </div>
           <nav aria-label="Workspace" className="flex-1 overflow-y-auto tutor-scroll">
-            <SidebarNav isStaff={isStaff} isAdmin={isAdmin} />
+            <SidebarNav isStaff={isStaff} isAdmin={isAdmin} roles={user.roles} />
           </nav>
           <div className="mt-4 border-t border-line pt-4">
             <div className="flex items-center gap-2.5 px-2">
@@ -67,7 +67,7 @@ export function AppShell({
 
       {/* Outside the blurred sticky header: a filter ancestor would make
           `position: fixed` resolve against the header instead of the viewport. */}
-      <MobileTabs isStaff={isStaff} isAdmin={isAdmin} />
+      <MobileTabs isStaff={isStaff} isAdmin={isAdmin} roles={user.roles} />
     </div>
   );
 }

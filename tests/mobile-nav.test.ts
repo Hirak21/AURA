@@ -30,9 +30,15 @@ test("mobile tabs follow the active workspace", () => {
   assert.match(source, /pathname\.startsWith\("\/mentor"\)/, "mentor context must be detected");
   assert.match(
     source,
-    /\[\.\.\.context, \.\.\.STUDENT_NAV, \.\.\.other\]/,
+    /\[\.\.\.context, \.\.\.STUDENT_NAV, \.\.\.staffNav\]/,
     "the active workspace's links must be ordered first",
   );
+});
+
+test("admin links are filtered by the user's actual roles", () => {
+  assert.match(source, /roles\?: readonly Role\[\]/, "nav items must declare role requirements");
+  assert.match(source, /roles: \["admin"\]/, "members must be admin-only");
+  assert.match(source, /!allowed\(item, userRoles\)/, "disallowed links must be hidden");
 });
 
 test("More is an accessible stateful disclosure", () => {

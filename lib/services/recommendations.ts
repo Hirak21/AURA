@@ -23,7 +23,7 @@ import type { Recommendation } from "../domain/types";
 export function getPrimaryRecommendation(userId: string): {
   recommendation: Recommendation;
   topicTitle: string;
-} {
+} | null {
   const topics = listTopics();
   const attempts = getAttempts(userId);
   const explained = getExplainedTopicIds(userId);
@@ -49,9 +49,7 @@ export function getPrimaryRecommendation(userId: string): {
     topics.find((t) => !touched.has(t.id)) ??
     topics[0];
 
-  if (!target) {
-    throw new Error("No published topics available. Run `npm run db:init`.");
-  }
+  if (!target) return null;
 
   const prereqs = getPrerequisites(target.id);
   const challenge = getChallengeForTopic(target.id);

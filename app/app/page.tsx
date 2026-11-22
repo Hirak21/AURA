@@ -13,7 +13,7 @@ import { getPrimaryRecommendation } from "@/lib/services/recommendations";
 import { db, schema } from "@/lib/db/client";
 import { and, eq } from "drizzle-orm";
 import { Card, LinkButton, StatusBadge, EvidenceMeter, DemoBadge } from "@/components/ui";
-import { EVIDENCE_LABELS, type TopicEvidenceState } from "@/lib/domain/types";
+import { EVIDENCE_LABELS, type Recommendation, type TopicEvidenceState } from "@/lib/domain/types";
 import { ArrowRight, ArrowUpRight, CalendarDays, Sparkles } from "lucide-react";
 
 export const metadata = { title: "Overview" };
@@ -36,7 +36,15 @@ export default async function StudentOverview() {
   const questions = topics.flatMap((t) => getQuestions(t.id));
   const questionById = new Map(questions.map((q) => [q.id, q]));
 
-  const { recommendation } = getPrimaryRecommendation(user.id);
+  const primary = getPrimaryRecommendation(user.id);
+  // An empty catalogue must render an honest empty state, never a 500.
+  const recommendation: Recommendation = primary?.recommendation ?? {
+    action: "start",
+    topicId: "",
+    label: "No learning content published yet",
+    reason: "The catalogue is empty. An operator can publish topics with `npm run db:seed-catalog`.",
+    evidence: ["Catalogue empty"],
+  };
   const states = getTopicStates(user.id);
   const recent = getRecentActivity(user.id, 5);
   const projects = getLearnerProjects(user.id);
@@ -44,7 +52,8 @@ export default async function StudentOverview() {
   const challengeByTopic = new Map(challenges.map((c) => [c.topicId, c]));
 
   const recTopic = topicById.get(recommendation.topicId) ?? topics[0];
-  const linkedChallenge = challengeByTopic.get(recTopic.id);
+  const recTopicId = recTopic?.id ?? recommendation.topicId;
+  const linkedChallenge = recTopicId ? challengeByTopic.get(recTopicId) : undefined;
 
   const upcoming = db
     .select()
@@ -83,9 +92,11 @@ export default async function StudentOverview() {
             Goal: <span className="text-ink">{user.learningGoal ?? "not set yet — add one in your profile"}</span>
           </p>
         </div>
-        <LinkButton href={`/app/tutor/${recTopic.id}`}>
-          Continue learning <ArrowRight size={15} aria-hidden />
-        </LinkButton>
+        {recTopicId ? (
+          <LinkButton href={`/app/tutor/${recTopicId}`}>
+            Continue learning <ArrowRight size={15} aria-hidden />
+          </LinkButton>
+        ) : null}
       </div>
 
       {/* Recommendation card — the heart of the overview */}
@@ -107,23 +118,27 @@ export default async function StudentOverview() {
               ))}
             </div>
             <div className="mt-5 flex flex-wrap gap-2">
-              <LinkButton href={`/app/tutor/${recommendation.topicId}`} size="sm">
-                Open tutor
-              </LinkButton>
+              {recTopicId ? (
+                <>
+                  <LinkButton href={`/app/tutor/${recTopicId}`} size="sm">
+                    Open tutor
+                  </LinkButton>
+                  <LinkButton href={`/learn/${recTopicId}`} size="sm" variant="tertiary">
+                    Read the topic page
+                  </LinkButton>
+                </>
+              ) : null}
               <LinkButton href="/app/practice" size="sm" variant="secondary">
                 Go to practice
-              </LinkButton>
-              <LinkButton href={`/learn/${recommendation.topicId}`} size="sm" variant="tertiary">
-                Read the topic page
               </LinkButton>
             </div>
           </div>
           <div className="rounded-lg border border-line bg-paper p-4">
             <p className="eyebrow">Evidence used</p>
             <ul className="mt-2 space-y-2 text-[12.5px] leading-snug text-strong">
-              <li>Attempts on this topic: <span className="metric text-ink">{recent.filter((a) => a.topicId === recTopic.id).length}</span></li>
+              <li>Attempts on this topic: <span className="metric text-ink">{recent.filter((a) => a.topicId === recTopicId).length}</span></li>
               <li>Topics explored: <span className="metric text-ink">{exploredCount}</span> of {topics.length}</li>
-              <li>Evidence state: <span className="text-ink">{EVIDENCE_LABELS[states[recTopic.id] ?? "not_started"]}</span></li>
+              <li>Evidence state: <span className="text-ink">{EVIDENCE_LABELS[states[recTopicId] ?? "not_started"]}</span></li>
             </ul>
             <p className="mt-3 border-t border-line pt-2.5 text-[11px] leading-relaxed text-mid">
               Rules run locally on recorded attempts. No ability score is computed or stored.

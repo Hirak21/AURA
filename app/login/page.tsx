@@ -113,15 +113,15 @@ export default async function LoginPage({
                 </div>
               </details>
             </Card>
-          ) : (
-            <p className="px-1 text-[12px] leading-relaxed text-mid">
-              Have an invite code?{" "}
-              <Link href="/signup" className="font-medium text-ink underline underline-offset-4">
-                Create your account
-              </Link>
-              . Otherwise ask your AURA coordinator for an invite.
-            </p>
-          )}
+          ) : null}
+
+          <p className="px-1 text-[12px] leading-relaxed text-mid">
+            Have an invite code?{" "}
+            <Link href="/signup" className="font-medium text-ink underline underline-offset-4">
+              Create your account
+            </Link>
+            . Otherwise ask your AURA coordinator for an invite.
+          </p>
         </div>
       </div>
     </div>

@@ -64,11 +64,6 @@ async function createRequest(data: PublicRequestInput) {
   return { ok: true as const, reference };
 }
 
-export async function submitCollaborationRequest(input: PublicRequestInput) {
-  const data = parseOrThrow(publicRequestSchema, input);
-  return createRequest(data);
-}
-
 /**
  * Progressive-enhancement wrapper used by the public form. It works with and
  * without client JavaScript: React serialises the action into the form, and

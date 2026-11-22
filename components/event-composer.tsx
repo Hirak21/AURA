@@ -15,22 +15,34 @@ export function EventComposer({ topics }: { topics: { id: string; title: string 
     setDone(null);
     const fd = new FormData(e.currentTarget);
     const form = e.currentTarget;
+    const title = String(fd.get("title") ?? "");
+    const summary = String(fd.get("summary") ?? "");
+    const startRaw = String(fd.get("startsAt") ?? "");
+    const endRaw = String(fd.get("endsAt") ?? "");
+    const closesRaw = String(fd.get("registrationClosesAt") ?? "");
+
+    // Validate before calling toISOString(): an empty datetime-local field
+    // produces Invalid Date and throws a RangeError outside the try/catch.
+    const startMs = Date.parse(startRaw);
+    const endMs = Date.parse(endRaw);
+    const closesMs = Date.parse(closesRaw);
+    if (!title || !summary || [startMs, endMs, closesMs].some((ms) => Number.isNaN(ms))) {
+      setError("Title, a short summary and valid start, end and registration-close times are required.");
+      return;
+    }
+
     const payload = {
-      title: String(fd.get("title") ?? ""),
-      summary: String(fd.get("summary") ?? ""),
+      title,
+      summary,
       type: String(fd.get("type") ?? "workshop") as "workshop",
-      startsAt: new Date(String(fd.get("startsAt") ?? "")).toISOString(),
-      endsAt: new Date(String(fd.get("endsAt") ?? "")).toISOString(),
+      startsAt: new Date(startMs).toISOString(),
+      endsAt: new Date(endMs).toISOString(),
       venue: String(fd.get("venue") ?? ""),
       mode: String(fd.get("mode") ?? "in_person") as "in_person",
       capacity: Number(fd.get("capacity") ?? 0),
-      registrationClosesAt: new Date(String(fd.get("registrationClosesAt") ?? "")).toISOString(),
+      registrationClosesAt: new Date(closesMs).toISOString(),
       topicId: String(fd.get("topicId") ?? "") || undefined,
     };
-    if (!payload.title || !payload.summary || Number.isNaN(new Date(payload.startsAt).getTime())) {
-      setError("Title, a short summary and a valid start time are required.");
-      return;
-    }
     startTransition(async () => {
       try {
         await createEvent(payload);

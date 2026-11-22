@@ -140,12 +140,16 @@ export function ReturnForm({ allocationId }: { allocationId: string }) {
         onClick={() => {
           setError(null);
           startTransition(async () => {
-            const res = await returnItem({ allocationId, conditionOnReturn: condition });
-            if (!res.ok) {
-              setError(res.error);
-              return;
+            try {
+              const res = await returnItem({ allocationId, conditionOnReturn: condition });
+              if (!res.ok) {
+                setError(res.error);
+                return;
+              }
+              setDone(true);
+            } catch (err) {
+              setError((err as Error).message);
             }
-            setDone(true);
           });
         }}
       >

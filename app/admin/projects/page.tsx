@@ -1,4 +1,4 @@
-import { requireRolePage } from "@/lib/auth";
+import { hasRole, requireRolePage } from "@/lib/auth";
 import { db, schema } from "@/lib/db/client";
 import { Card, SectionTitle, StatusBadge, DataTable, Th, Td, DemoBadge } from "@/components/ui";
 import { ShowcaseDecision } from "@/components/showcase-decision";
@@ -8,7 +8,8 @@ import { PROJECT_STATUS_LABELS, type ProjectStatus } from "@/lib/domain/types";
 export const metadata = { title: "Admin · Projects" };
 
 export default async function AdminProjectsPage() {
-  await requireRolePage("admin", "curator", "mentor", "reviewer");
+  const user = await requireRolePage("admin", "curator", "mentor", "reviewer");
+  const canDecideShowcase = hasRole(user, "admin");
   const projects = db.select().from(schema.projects).all();
   const users = db.select().from(schema.users).all();
   const userById = new Map(users.map((u) => [u.id, u]));
@@ -82,7 +83,11 @@ export default async function AdminProjectsPage() {
                   </p>
                 </div>
                 <DemoBadge>Demo</DemoBadge>
-                <ShowcaseDecision projectId={p.id} status={p.status} consent={p.consentToShowcase} />
+                {canDecideShowcase ? (
+                  <ShowcaseDecision projectId={p.id} status={p.status} consent={p.consentToShowcase} />
+                ) : (
+                  <span className="text-[11.5px] text-mid">Admin decision required</span>
+                )}
               </Card>
             ))}
           </div>

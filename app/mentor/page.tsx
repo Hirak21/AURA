@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireRolePage } from "@/lib/auth";
 import { db, schema } from "@/lib/db/client";
 import { eq, and } from "drizzle-orm";
@@ -121,9 +120,7 @@ export default async function MentorHome() {
                 <div key={p.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                   <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{p.title}</span>
                   <span className="text-[11.5px] text-mid">{author?.displayName}</span>
-                  <Link href={`/mentor/project/${p.id}`} className="text-[12px] font-medium hover:underline">
-                    Review
-                  </Link>
+                  <span className="text-[11.5px] text-mid">Not assigned to you</span>
                 </div>
               );
             })}

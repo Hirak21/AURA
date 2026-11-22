@@ -107,19 +107,6 @@ export async function reviewProject(input: z.infer<typeof reviewSchema>) {
   return { ok: true as const };
 }
 
-async function assignReviewer(projectId: string, reviewerId: string) {
-  await requireRole("admin", "mentor", "reviewer");
-  db.update(schema.projects).set({ reviewerId }).where(eq(schema.projects.id, projectId)).run();
-  revalidatePath("/admin/projects");
-  return { ok: true as const };
-}
-
-const assignSchema = z.object({ projectId: z.string().min(1), reviewerId: z.string().min(1) });
-export async function assignProjectReviewer(input: z.infer<typeof assignSchema>) {
-  const { projectId, reviewerId } = parseOrThrow(assignSchema, input);
-  return assignReviewer(projectId, reviewerId);
-}
-
 /* ---------------- Showcase consent ---------------- */
 
 const showcaseSchema = z.object({ projectId: z.string().min(1), consent: z.boolean() });

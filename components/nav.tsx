@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import type { Role } from "@/lib/domain/types";
 import {
   LayoutDashboard,
   MessagesSquare,
@@ -27,6 +28,8 @@ interface NavItem {
   icon: LucideIcon;
   /** Compact label for the bottom bar, where width is tight. */
   short?: string;
+  /** Roles allowed to see this link. Mirrors the page's requireRolePage() guard. */
+  roles?: readonly Role[];
 }
 
 /* Icon resolution happens inside this client module, so nothing
@@ -48,14 +51,18 @@ const MENTOR_NAV: NavItem[] = [
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { href: "/admin", label: "Overview", icon: ShieldCheck },
-  { href: "/admin/learning", label: "Learning content", icon: BookOpenCheck },
-  { href: "/admin/events", label: "Events", icon: CalendarDays },
-  { href: "/admin/projects", label: "Projects", icon: Hammer },
-  { href: "/admin/schools", label: "School requests", icon: School },
-  { href: "/admin/inventory", label: "Inventory", icon: Boxes },
-  { href: "/admin/members", label: "Members", icon: Users },
+  { href: "/admin", label: "Overview", icon: ShieldCheck, roles: ["admin", "curator", "liaison", "organizer", "custodian"] },
+  { href: "/admin/learning", label: "Learning content", icon: BookOpenCheck, roles: ["curator", "admin", "mentor"] },
+  { href: "/admin/events", label: "Events", icon: CalendarDays, roles: ["organizer", "admin", "curator"] },
+  { href: "/admin/projects", label: "Projects", icon: Hammer, roles: ["admin", "curator", "mentor", "reviewer"] },
+  { href: "/admin/schools", label: "School requests", icon: School, roles: ["liaison", "admin", "organizer"] },
+  { href: "/admin/inventory", label: "Inventory", icon: Boxes, roles: ["custodian", "admin"] },
+  { href: "/admin/members", label: "Members", icon: Users, roles: ["admin"] },
 ];
+
+function allowed(item: NavItem, userRoles: readonly Role[]): boolean {
+  return !item.roles || item.roles.some((role) => userRoles.includes(role));
+}
 
 function isActivePath(pathname: string, href: string) {
   if (href === "/app" || href === "/admin" || href === "/mentor") return pathname === href;
@@ -66,16 +73,20 @@ function Group({
   title,
   items,
   pathname,
+  userRoles,
 }: {
   title: string;
   items: NavItem[];
   pathname: string;
+  userRoles: readonly Role[];
 }) {
+  const visible = items.filter((item) => allowed(item, userRoles));
+  if (visible.length === 0) return null;
   return (
     <div className="mb-6">
       <p className="mb-2 px-3 font-mono text-[10px] uppercase tracking-[0.14em] text-mid">{title}</p>
       <ul className="space-y-0.5">
-        {items.map(({ href, label, icon: Icon }) => {
+        {visible.map(({ href, label, icon: Icon }) => {
           const active = isActivePath(pathname, href);
           return (
             <li key={href}>
@@ -97,13 +108,13 @@ function Group({
   );
 }
 
-export function SidebarNav({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: boolean }) {
+export function SidebarNav({ isStaff, isAdmin, roles }: { isStaff: boolean; isAdmin: boolean; roles: readonly Role[] }) {
   const pathname = usePathname();
   return (
     <>
-      <Group title="Learn" items={STUDENT_NAV} pathname={pathname} />
+      <Group title="Learn" items={STUDENT_NAV} pathname={pathname} userRoles={roles} />
       {isStaff ? (
-        <Group title="Operate" items={isAdmin ? ADMIN_NAV : MENTOR_NAV} pathname={pathname} />
+        <Group title="Operate" items={isAdmin ? ADMIN_NAV : MENTOR_NAV} pathname={pathname} userRoles={roles} />
       ) : null}
     </>
   );
@@ -197,24 +208,20 @@ function MobileMoreMenu({ items, pathname }: { items: NavItem[]; pathname: strin
  * sees mentor destinations first, and the student workspace is the default.
  * Ordering only changes — every link stays reachable, with no duplicates.
  */
-export function tabsFor(pathname: string, isStaff: boolean, isAdmin: boolean): NavItem[] {
-  const context: NavItem[] = pathname.startsWith("/admin") && isAdmin
-    ? ADMIN_NAV
-    : pathname.startsWith("/mentor") && isStaff
-      ? MENTOR_NAV
-      : [];
-  const other = isAdmin ? ADMIN_NAV : isStaff ? MENTOR_NAV : [];
+export function tabsFor(pathname: string, isStaff: boolean, isAdmin: boolean, userRoles: readonly Role[]): NavItem[] {
+  const staffNav = (isAdmin ? ADMIN_NAV : isStaff ? MENTOR_NAV : []).filter((item) => allowed(item, userRoles));
+  const context: NavItem[] = pathname.startsWith("/admin") || pathname.startsWith("/mentor") ? staffNav : [];
   const seen = new Set<string>();
-  return [...context, ...STUDENT_NAV, ...other].filter((item) => {
-    if (seen.has(item.href)) return false;
+  return [...context, ...STUDENT_NAV, ...staffNav].filter((item) => {
+    if (!allowed(item, userRoles) || seen.has(item.href)) return false;
     seen.add(item.href);
     return true;
   });
 }
 
-export function MobileTabs({ isStaff, isAdmin }: { isStaff: boolean; isAdmin: boolean }) {
+export function MobileTabs({ isStaff, isAdmin, roles }: { isStaff: boolean; isAdmin: boolean; roles: readonly Role[] }) {
   const pathname = usePathname();
-  const items = tabsFor(pathname, isStaff, isAdmin);
+  const items = tabsFor(pathname, isStaff, isAdmin, roles);
   const primary = items.slice(0, 4);
   const overflow = items.slice(4);
 
