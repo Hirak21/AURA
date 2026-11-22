@@ -5,7 +5,7 @@
  * cross-module workflow, and database foreign-key integrity. Never writes.
  */
 import fs from "node:fs";
-import { DATASET_ID, DATASET_VERSION, DEMO_IDS } from "./demo-dataset";
+import { DATASET_ID, DATASET_VERSION, DEMO_IDS, DEMO_USERS } from "./demo-dataset";
 import { openDatabase, resolveDbPath } from "./_db";
 import {
   assertReferences,
@@ -51,8 +51,8 @@ function buildChecks(sqlite: DB): Check[] {
   } catch {
     referencesOk = false;
   }
-  push("Baseline demo references", referencesOk,
-    referencesOk ? "all referenced users, topics, questions and catalogue rows are still demo records" : "a referenced baseline record is missing or no longer marked demo");
+  push("Baseline catalogue references", referencesOk,
+    referencesOk ? "all referenced topics, questions, events and resources are still demo records" : "a referenced baseline catalogue record is missing or changed");
 
   const manifest = readManifest(sqlite);
   if (!manifest) {
@@ -69,6 +69,25 @@ function buildChecks(sqlite: DB): Check[] {
   push("Recorded rows present", missing === 0,
     missing === 0 ? `${manifest.rows.length}/${manifest.rows.length} present` : `${missing} recorded row(s) missing; re-run the seed`);
 
+  const demoUserIds = manifestIds(sqlite, "users");
+  const lockedUsers = demoUserIds.length
+    ? count(sqlite,
+        `SELECT COUNT(*) c FROM users
+         WHERE id IN (${placeholders(demoUserIds)})
+           AND is_demo = 1
+           AND password_hash IS NULL
+           AND password_updated_at IS NULL
+           AND email LIKE '%@demo.aura.local'`,
+        demoUserIds)
+    : 0;
+  push("Locked demo identities", demoUserIds.length === 6 && lockedUsers === 6,
+    `${lockedUsers}/${demoUserIds.length} demo accounts are labelled, passwordless and demo-email scoped`);
+
+  const demoSessions = demoUserIds.length
+    ? count(sqlite, `SELECT COUNT(*) c FROM sessions WHERE user_id IN (${placeholders(demoUserIds)})`, demoUserIds)
+    : 0;
+  push("No demo sessions", demoSessions === 0, `${demoSessions} sessions for demo identities`);
+
   const tutorIds = manifestIds(sqlite, "tutor_messages");
   const tutorResponses = tutorIds.length
     ? count(sqlite,
@@ -77,8 +96,8 @@ function buildChecks(sqlite: DB): Check[] {
            AND content LIKE '%"provider":"demo"%'`,
         tutorIds)
     : 0;
-  push("Learning evidence", tutorResponses >= 2 && count(sqlite, "SELECT COUNT(*) c FROM tutor_sessions WHERE id LIKE 'pd1-%'") >= 3,
-    `${tutorResponses} curated demo tutor responses, ${count(sqlite, "SELECT COUNT(*) c FROM tutor_sessions WHERE id LIKE 'pd1-%'")} tutor sessions`);
+  push("Learning evidence", tutorResponses >= 2 && count(sqlite, "SELECT COUNT(*) c FROM tutor_sessions WHERE id LIKE 'pd2-%'") >= 3,
+    `${tutorResponses} curated demo tutor responses, ${count(sqlite, "SELECT COUNT(*) c FROM tutor_sessions WHERE id LIKE 'pd2-%'")} tutor sessions`);
 
   const attemptIds = manifestIds(sqlite, "practice_attempts");
   const correctAttempts = attemptIds.length
@@ -110,9 +129,11 @@ function buildChecks(sqlite: DB): Check[] {
   push("Consent respected", !!approvedNoConsent && approvedNoConsent.status === "approved" && approvedNoConsent.consent === 0,
     approvedNoConsent ? `status=${approvedNoConsent.status}, consent=${approvedNoConsent.consent}` : "approved project missing");
 
+  const mentorPairIds: SqlValue[] = [DEMO_USERS.kabir, DEMO_USERS.ananya, DEMO_USERS.rohit];
   const mentorLinks = count(sqlite,
     `SELECT COUNT(*) c FROM mentor_assignments
-     WHERE mentor_id = 'u-kabir' AND student_id IN ('u-ananya','u-rohit') AND status = 'active'`);
+     WHERE mentor_id = ? AND student_id IN (?, ?) AND status = 'active'`,
+    mentorPairIds);
   push("Mentor assignment linkage", mentorLinks >= 2, `${mentorLinks} active demo mentor assignments`);
 
   const recap = one<{ status: string }>(sqlite, "SELECT status FROM events WHERE id = ?", [DEMO_IDS.eventRecap]);
@@ -132,7 +153,7 @@ function buildChecks(sqlite: DB): Check[] {
     "SELECT status, owner_id FROM collaboration_requests WHERE id = ?",
     [DEMO_IDS.request],
   );
-  push("School collaboration workflow", !!request && request.status === "in_review" && request.owner_id === "u-devika",
+  push("School collaboration workflow", !!request && request.status === "in_review" && request.owner_id === DEMO_USERS.devika,
     request ? `status=${request.status}, owner=${request.owner_id}` : "demo school request missing");
 
   const movementIds = manifestIds(sqlite, "stock_movements");
@@ -163,7 +184,10 @@ function main() {
 
   const { sqlite } = openDatabase({ readonly: true });
   try {
-    for (const table of ["demo_seed_meta", "users", "projects", "resource_allocations", "audit_events"]) {
+    for (const table of [
+      "demo_seed_meta", "users", "user_roles", "sessions", "mentor_assignments",
+      "projects", "resource_allocations", "audit_events",
+    ]) {
       if (!tableExists(sqlite, table)) throw new Error(`Missing table ${table}; run npm run db:migrate first.`);
     }
 

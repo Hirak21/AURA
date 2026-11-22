@@ -9,7 +9,7 @@ AURA is one product with two connected layers:
 
 Built for the **education** problem statement: *students struggle to understand complex topics and to find resources that match their level.* It is the learning and innovation workspace of the **Automation & Robotics Association, Guwahati University**.
 
-> **Data notice.** Seeded people, schools, events and inventory are fictional and labelled as demo data throughout the app. There is **no live AI model connected** — the tutor is a deterministic, curated Demo Tutor and says so on every response. Authentication is real (scrypt password hashing + server-side sessions); the demo identity picker is opt-in via `AURA_DEMO_MODE` and is off by default in production. A separate, manifest-scoped demo activity layer can be added to a deployed instance only through an explicitly approved dry-run/apply workflow — see [docs/PRODUCTION_DEMO_SEED.md](docs/PRODUCTION_DEMO_SEED.md).
+> **Data notice.** Seeded people, schools, events and inventory are fictional and labelled as demo data throughout the app. There is **no live AI model connected** — the tutor is a deterministic, curated Demo Tutor and says so on every response. Authentication is real (scrypt password hashing + server-side sessions); the demo identity picker is opt-in via `AURA_DEMO_MODE` and is off by default in production. A separate, manifest-scoped demo activity layer can be added to a deployed instance only through an explicitly approved dry-run/apply workflow. It creates six **locked, passwordless demo-only identities** so no fictional activity is attached to real accounts — see [docs/PRODUCTION_DEMO_SEED.md](docs/PRODUCTION_DEMO_SEED.md).
 
 ---
 
@@ -24,7 +24,7 @@ npm run dev           # http://localhost:3000
 Then open `/login` and sign in with a demo account. The seeded demo password is `aura-demo-2026` (change `AURA_SEED_PASSWORD` before running `db:init` if the instance is public).
 
 ```bash
-npm test              # 71 tests: grading, adaptation, integrity, navigation, security, demo seed, structural guards
+npm test              # 72 tests: grading, adaptation, integrity, navigation, security, demo seed, structural guards
 npm run typecheck
 npm run build && npm start
 npm run db:reset      # wipe + reseed (local/disposable DB only — never in production)

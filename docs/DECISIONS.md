@@ -135,3 +135,11 @@ Format: **D-nn · Decision** — Context → Options → Chosen → Consequences
 **Chosen.** Ship the supplied files under `public/brand/` and render them with plain `<img>` elements (`Wordmark`, `CoreLogo`, `Symbol`, `FullLockup`). Black/white variants only; the descriptor is “Automation & Robotics Association”.
 **Consequences.** The identity is exact, scalable and guideline-compliant. No font is ever substituted for the wordmark.
 **Revisit if.** A newer brand-kit release supersedes v1.1.
+
+---
+
+## D-17 · Locked demo identities for the production activity layer
+**Context.** The production database has real staff accounts and no baseline demo users. Attaching fictional learning/review activity to real accounts would contaminate their history; signing in as shared demo accounts on a public host would create a credential risk.
+**Chosen.** Dataset v2 creates six `pd2-user-*` accounts with `is_demo = 1`, `@demo.aura.local` emails, roles and mentor links, but **no password hash and no sessions**. All are recorded in `demo_seed_meta` and removed with the rest of the manifest.
+**Consequences.** Demo workflows render in the app without touching real people, but nobody can sign in as a demo persona. Production smoke tests use a real admin account. The prior v1 dry-run refusal was the correct safety outcome.
+**Revisit if.** An isolated staging instance is created where password-enabled demo accounts are acceptable.

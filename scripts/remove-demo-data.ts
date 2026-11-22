@@ -41,11 +41,11 @@ function assertNoForeignAuditReferences(sqlite: DB) {
   const demoEntityIds = [
     ...new Set(
       dataset.rows.flatMap((r) => {
-        const keyId = typeof r.keys.id === "string" && r.keys.id.startsWith("pd1-") ? [r.keys.id] : [];
+        const keyId = typeof r.keys.id === "string" && r.keys.id.startsWith("pd2-") ? [r.keys.id] : [];
         const auditEntity =
           r.table === "audit_events" &&
           typeof r.values.entity_id === "string" &&
-          r.values.entity_id.startsWith("pd1-")
+          r.values.entity_id.startsWith("pd2-")
             ? [r.values.entity_id]
             : [];
         return [...keyId, ...auditEntity];

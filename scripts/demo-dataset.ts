@@ -1,10 +1,10 @@
 /**
  * Deterministic, manifest-scoped production demo dataset.
  *
- * This module is deliberately separate from lib/db/seed.ts. It does NOT create
- * users, subjects, topics, questions, challenges or inventory records: those
- * are the application's baseline catalogue. Instead it adds a small, fictional
- * activity layer that references only existing, clearly-demo catalogue rows.
+ * This module is deliberately separate from lib/db/seed.ts. It does NOT change
+ * the baseline catalogue or any real account. It creates six locked,
+ * clearly-labelled demo identities (no password hashes, no sessions) plus a
+ * fictional activity layer that references only existing demo catalogue rows.
  *
  * Every row has a fixed ID (or fixed composite key) and is recorded in
  * demo_seed_meta, so a rerun is a no-op and removal is scoped to exactly what
@@ -13,23 +13,37 @@
 import { createHash } from "node:crypto";
 import { tutorResponseSchema, type TutorResponse } from "../lib/domain/types";
 
-export const DATASET_ID = "aura-production-demo-v1";
-export const DATASET_VERSION = 1;
-export const DEMO_ID_PREFIX = "pd1-";
+export const DATASET_ID = "aura-production-demo-v2";
+export const DATASET_VERSION = 2;
+export const DEMO_ID_PREFIX = "pd2-";
 
 export const DEMO_IDS = {
   projects: {
-    showcase: "pd1-project-showcase-led",
-    approved: "pd1-project-approved-motion",
+    showcase: "pd2-project-showcase-led",
+    approved: "pd2-project-approved-motion",
   },
-  eventRecap: "pd1-event-recap",
-  request: "pd1-request-outreach",
+  eventRecap: "pd2-event-recap",
+  request: "pd2-request-outreach",
   allocations: {
-    resistorKit: "pd1-allocation-resistor-kit",
-    ledPack: "pd1-allocation-led-pack",
-    jumpers: "pd1-allocation-jumpers",
-    multimeter: "pd1-allocation-multimeter",
+    resistorKit: "pd2-allocation-resistor-kit",
+    ledPack: "pd2-allocation-led-pack",
+    jumpers: "pd2-allocation-jumpers",
+    multimeter: "pd2-allocation-multimeter",
   },
+} as const;
+
+/**
+ * Locked demo-only identities. They have no password hash and no sessions, so
+ * they cannot be used to sign in. They exist so fictional activity never has
+ * to be attached to a real user account.
+ */
+export const DEMO_USERS = {
+  ananya: "pd2-user-ananya",
+  rohit: "pd2-user-rohit",
+  meera: "pd2-user-meera",
+  kabir: "pd2-user-kabir",
+  devika: "pd2-user-devika",
+  ishaan: "pd2-user-ishaan",
 } as const;
 
 export type SqlValue = string | number | null;
@@ -62,16 +76,8 @@ export interface DemoDataset {
   manifest: DemoManifest;
 }
 
-/** Baseline records this dataset is allowed to reference. */
+/** Baseline catalogue records this dataset is allowed to reference. */
 export const REQUIRED_REFERENCES = {
-  users: [
-    { id: "u-ananya", label: "Ananya Baruah" },
-    { id: "u-rohit", label: "Rohit Das" },
-    { id: "u-meera", label: "Meera Kalita" },
-    { id: "u-kabir", label: "Kabir Ahmed" },
-    { id: "u-devika", label: "Devika Sharma" },
-    { id: "u-ishaan", label: "Ishaan Gogoi" },
-  ],
   topics: [
     { id: "t-ohm", title: "Ohm's Law" },
     { id: "t-series", title: "Series & Parallel Circuits" },
@@ -119,6 +125,9 @@ export const DELETE_ORDER = [
   "collaboration_requests",
   "projects",
   "events",
+  "mentor_assignments",
+  "user_roles",
+  "users",
 ] as const;
 
 function stableStringify(value: unknown): string {
@@ -176,11 +185,109 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
     rows.push({ table, keys, values: normalized });
   };
 
+  // ── Locked demo identities ──────────────────────────────────────────────
+  // No password_hash / password_updated_at columns are supplied: these rows
+  // cannot authenticate. Roles are included so mentor/reviewer workflows render.
+  const demoPeople: Array<{
+    id: string;
+    displayName: string;
+    email: string;
+    preferredLevel: "beginner" | "intermediate" | "advanced";
+    learningGoal: string;
+    roles: string[];
+    createdDay: number;
+  }> = [
+    {
+      id: DEMO_USERS.ananya,
+      displayName: "Ananya Baruah (demo)",
+      email: "ananya.pd2@demo.aura.local",
+      preferredLevel: "beginner",
+      learningGoal: "Build and explain a safe LED indicator circuit.",
+      roles: ["student"],
+      createdDay: -21,
+    },
+    {
+      id: DEMO_USERS.rohit,
+      displayName: "Rohit Das (demo)",
+      email: "rohit.pd2@demo.aura.local",
+      preferredLevel: "intermediate",
+      learningGoal: "Connect force, mass and acceleration in one model.",
+      roles: ["student", "member"],
+      createdDay: -30,
+    },
+    {
+      id: DEMO_USERS.meera,
+      displayName: "Meera Kalita (demo)",
+      email: "meera.pd2@demo.aura.local",
+      preferredLevel: "beginner",
+      learningGoal: "Simplify fractions without hints.",
+      roles: ["student"],
+      createdDay: -14,
+    },
+    {
+      id: DEMO_USERS.kabir,
+      displayName: "Kabir Ahmed (demo)",
+      email: "kabir.pd2@demo.aura.local",
+      preferredLevel: "advanced",
+      learningGoal: "Review electronics and motion projects.",
+      roles: ["mentor", "reviewer"],
+      createdDay: -60,
+    },
+    {
+      id: DEMO_USERS.devika,
+      displayName: "Devika Sharma (demo)",
+      email: "devika.pd2@demo.aura.local",
+      preferredLevel: "intermediate",
+      learningGoal: "Coordinate fictional school outreach.",
+      roles: ["liaison", "organizer"],
+      createdDay: -90,
+    },
+    {
+      id: DEMO_USERS.ishaan,
+      displayName: "Ishaan Gogoi (demo)",
+      email: "ishaan.pd2@demo.aura.local",
+      preferredLevel: "beginner",
+      learningGoal: "Track demo lab inventory.",
+      roles: ["custodian"],
+      createdDay: -45,
+    },
+  ];
+  for (const person of demoPeople) {
+    add("users", { id: person.id }, {
+      id: person.id,
+      displayName: person.displayName,
+      email: person.email,
+      status: "active",
+      preferredLevel: person.preferredLevel,
+      learningGoal: person.learningGoal,
+      isDemo: 1,
+      createdAt: at(person.createdDay),
+    });
+    for (const role of person.roles) {
+      add("user_roles", { user_id: person.id, role }, { user_id: person.id, role });
+    }
+  }
+
+  const mentorLinks: Array<{ id: string; mentorId: string; studentId: string; scope: string; day: number }> = [
+    { id: `${DEMO_ID_PREFIX}mentor-ananya`, mentorId: DEMO_USERS.kabir, studentId: DEMO_USERS.ananya, scope: "LED circuit project (demo)", day: -12 },
+    { id: `${DEMO_ID_PREFIX}mentor-rohit`, mentorId: DEMO_USERS.kabir, studentId: DEMO_USERS.rohit, scope: "Motion explanation project (demo)", day: -7 },
+  ];
+  for (const link of mentorLinks) {
+    add("mentor_assignments", { id: link.id }, {
+      id: link.id,
+      mentorId: link.mentorId,
+      studentId: link.studentId,
+      scope: link.scope,
+      status: "active",
+      createdAt: at(link.day),
+    });
+  }
+
   // ── Learning evidence ───────────────────────────────────────────────────
   const tutorSessions: Array<[string, string, number, number]> = [
-    ["u-ananya", "t-ohm", -12, -6],
-    ["u-ananya", "t-series", -6, -5],
-    ["u-meera", "t-fractions", -9, -4],
+    [DEMO_USERS.ananya, "t-ohm", -12, -6],
+    [DEMO_USERS.ananya, "t-series", -6, -5],
+    [DEMO_USERS.meera, "t-fractions", -9, -4],
   ];
   for (const [userId, topicId, first, last] of tutorSessions) {
     add(
@@ -303,8 +410,8 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
     createdAt: string;
   }> = [
     {
-      id: "pd1-tm-ohm-question",
-      userId: "u-ananya",
+      id: "pd2-tm-ohm-question",
+      userId: DEMO_USERS.ananya,
       topicId: "t-ohm",
       role: "user",
       level: "beginner",
@@ -313,8 +420,8 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
       createdAt: at(-6),
     },
     {
-      id: "pd1-tm-ohm-answer",
-      userId: "u-ananya",
+      id: "pd2-tm-ohm-answer",
+      userId: DEMO_USERS.ananya,
       topicId: "t-ohm",
       role: "tutor",
       level: "beginner",
@@ -323,8 +430,8 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
       createdAt: at(-6, 0.01),
     },
     {
-      id: "pd1-tm-frac-question",
-      userId: "u-meera",
+      id: "pd2-tm-frac-question",
+      userId: DEMO_USERS.meera,
       topicId: "t-fractions",
       role: "user",
       level: "beginner",
@@ -333,8 +440,8 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
       createdAt: at(-4),
     },
     {
-      id: "pd1-tm-frac-answer",
-      userId: "u-meera",
+      id: "pd2-tm-frac-answer",
+      userId: DEMO_USERS.meera,
       topicId: "t-fractions",
       role: "tutor",
       level: "beginner",
@@ -357,50 +464,50 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
     createdAt: string;
   }> = [
     {
-      id: "pd1-pa-ohm-mcq-wrong",
-      userId: "u-ananya", questionId: "q-ohm-1", topicId: "t-ohm", response: "a",
+      id: "pd2-pa-ohm-mcq-wrong",
+      userId: DEMO_USERS.ananya, questionId: "q-ohm-1", topicId: "t-ohm", response: "a",
       isCorrect: 0,
       feedback: "Not quite. Raising resistance lowers current for the same voltage; start from I = V ÷ R.",
       confidence: 3, createdAt: at(-6),
     },
     {
-      id: "pd1-pa-ohm-mcq-right",
-      userId: "u-ananya", questionId: "q-ohm-1", topicId: "t-ohm", response: "b",
+      id: "pd2-pa-ohm-mcq-right",
+      userId: DEMO_USERS.ananya, questionId: "q-ohm-1", topicId: "t-ohm", response: "b",
       isCorrect: 1,
       feedback: "Correct. Ohm's Law gives I = V ÷ R.",
       confidence: 4, createdAt: at(-6, 0.02),
     },
     {
-      id: "pd1-pa-ohm-numeric",
-      userId: "u-ananya", questionId: "q-ohm-2", topicId: "t-ohm", response: "2",
+      id: "pd2-pa-ohm-numeric",
+      userId: DEMO_USERS.ananya, questionId: "q-ohm-2", topicId: "t-ohm", response: "2",
       isCorrect: 1,
       feedback: "Correct. R = 6 V ÷ 3 A = 2 Ω.",
       confidence: 4, createdAt: at(-5),
     },
     {
-      id: "pd1-pa-frac-add",
-      userId: "u-meera", questionId: "q-frac-1", topicId: "t-fractions", response: "0.83",
+      id: "pd2-pa-frac-add",
+      userId: DEMO_USERS.meera, questionId: "q-frac-1", topicId: "t-fractions", response: "0.83",
       isCorrect: 1,
       feedback: "Correct. 1/2 + 1/3 = 5/6 ≈ 0.83.",
       confidence: 4, createdAt: at(-4),
     },
     {
-      id: "pd1-pa-frac-simplify-wrong",
-      userId: "u-meera", questionId: "q-frac-2", topicId: "t-fractions", response: "4/6",
+      id: "pd2-pa-frac-simplify-wrong",
+      userId: DEMO_USERS.meera, questionId: "q-frac-2", topicId: "t-fractions", response: "4/6",
       isCorrect: 0,
       feedback: "You made a valid equivalent fraction, but 2 still divides both numbers. Keep going.",
       confidence: 3, createdAt: at(-4, 0.01),
     },
     {
-      id: "pd1-pa-frac-simplify-right",
-      userId: "u-meera", questionId: "q-frac-2", topicId: "t-fractions", response: "3/4",
+      id: "pd2-pa-frac-simplify-right",
+      userId: DEMO_USERS.meera, questionId: "q-frac-2", topicId: "t-fractions", response: "3/4",
       isCorrect: 1,
       feedback: "Correct. 6 and 8 share the factor 2, so 6/8 = 3/4.",
       confidence: 5, createdAt: at(-4, 0.02),
     },
     {
-      id: "pd1-pa-ohm-resistor",
-      userId: "u-rohit", questionId: "q-ohm-3", topicId: "t-ohm", response: "150",
+      id: "pd2-pa-ohm-resistor",
+      userId: DEMO_USERS.rohit, questionId: "q-ohm-3", topicId: "t-ohm", response: "150",
       isCorrect: 1,
       feedback: "Correct. The resistor drops 3 V at 0.02 A, so R = 150 Ω.",
       confidence: 5, createdAt: at(-3),
@@ -410,14 +517,14 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
 
   const goals = [
     {
-      id: "pd1-goal-ananya",
-      user_id: "u-ananya",
+      id: "pd2-goal-ananya",
+      user_id: DEMO_USERS.ananya,
       text: "Build and explain a safe LED indicator circuit by the end of the week.",
       created_at: at(-12),
     },
     {
-      id: "pd1-goal-meera",
-      user_id: "u-meera",
+      id: "pd2-goal-meera",
+      user_id: DEMO_USERS.meera,
       text: "Clear the fractions check without opening a hint.",
       created_at: at(-9),
     },
@@ -425,9 +532,9 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
   for (const g of goals) add("learning_goals", { id: g.id }, g);
 
   const bookmarks: Array<[string, string, number]> = [
-    ["u-ananya", "t-series", -5],
-    ["u-rohit", "t-newton", -4],
-    ["u-meera", "t-algebra", -3],
+    [DEMO_USERS.ananya, "t-series", -5],
+    [DEMO_USERS.rohit, "t-newton", -4],
+    [DEMO_USERS.meera, "t-algebra", -3],
   ];
   for (const [user_id, topic_id, day] of bookmarks) {
     add("bookmarks", { user_id, topic_id }, { user_id, topic_id, created_at: at(day) });
@@ -437,13 +544,13 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
   const showcaseProject = {
     id: DEMO_IDS.projects.showcase,
     challenge_id: "c-led-circuit",
-    author_id: "u-ananya",
+    author_id: DEMO_USERS.ananya,
     title: "LED rail indicator with a measured resistor choice",
     draft:
       "Demo record. Target 20 mA from a 5 V rail; the red LED drops 2 V, so the resistor drops 3 V. R = 3 ÷ 0.02 = 150 Ω. I measured 2.98 V across the resistor on the breadboard, giving about 19.9 mA. The revised note also records the LED voltage and explains why the nearest standard value is safe.",
-    evidence_url: "https://demo.aura.local/evidence/pd1-ananya-led",
+    evidence_url: "https://demo.aura.local/evidence/pd2-ananya-led",
     status: "showcased",
-    reviewer_id: "u-kabir",
+    reviewer_id: DEMO_USERS.kabir,
     consent_to_showcase: 1,
     created_at: at(-10),
     updated_at: at(-2),
@@ -454,13 +561,13 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
   const approvedProject = {
     id: DEMO_IDS.projects.approved,
     challenge_id: "c-projectile",
-    author_id: "u-rohit",
+    author_id: DEMO_USERS.rohit,
     title: "Why two masses fall together in the ideal model",
     draft:
       "Demo record. I listed the forces on a 2 kg and a 5 kg cart, applied F = m × a with the same net force, and showed that the smaller mass accelerates faster. For ideal free fall the force grows with mass too, so acceleration stays the same. I added a note separating the model from air resistance.",
-    evidence_url: "https://demo.aura.local/evidence/pd1-rohit-motion",
+    evidence_url: "https://demo.aura.local/evidence/pd2-rohit-motion",
     status: "approved",
-    reviewer_id: "u-kabir",
+    reviewer_id: DEMO_USERS.kabir,
     consent_to_showcase: 0,
     created_at: at(-7),
     updated_at: at(-3),
@@ -470,27 +577,27 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
 
   const reviews = [
     {
-      id: "pd1-review-led-changes",
+      id: "pd2-review-led-changes",
       project_id: showcaseProject.id,
-      reviewer_id: "u-kabir",
+      reviewer_id: DEMO_USERS.kabir,
       decision: "changes_requested",
       feedback:
         "Demo review: the resistor maths is correct, but add the measured LED voltage and explain why the nearest standard value is safe before resubmitting.",
       created_at: at(-5),
     },
     {
-      id: "pd1-review-led-approved",
+      id: "pd2-review-led-approved",
       project_id: showcaseProject.id,
-      reviewer_id: "u-kabir",
+      reviewer_id: DEMO_USERS.kabir,
       decision: "approved",
       feedback:
         "Demo review: revision records both measurements and the safety reasoning. Approved for showcase with the author's consent.",
       created_at: at(-3),
     },
     {
-      id: "pd1-review-motion-approved",
+      id: "pd2-review-motion-approved",
       project_id: approvedProject.id,
-      reviewer_id: "u-kabir",
+      reviewer_id: DEMO_USERS.kabir,
       decision: "approved",
       feedback:
         "Demo review: force, mass and acceleration are separated correctly, and the ideal-model caveat is clearly stated. Approved; not published because consent was not given.",
@@ -520,11 +627,11 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
   add("events", { id: recapEvent.id }, recapEvent);
 
   const registrations = [
-    { id: "pd1-reg-solder-ananya", event_id: "e-solder", user_id: "u-ananya", status: "registered", created_at: at(-3), attended_at: null },
-    { id: "pd1-reg-solder-meera", event_id: "e-solder", user_id: "u-meera", status: "registered", created_at: at(-3), attended_at: null },
-    { id: "pd1-reg-school-ananya", event_id: "e-school", user_id: "u-ananya", status: "registered", created_at: at(-2), attended_at: null },
-    { id: "pd1-reg-recap-ananya", event_id: recapEvent.id, user_id: "u-ananya", status: "attended", created_at: at(-9), attended_at: at(-8) },
-    { id: "pd1-reg-recap-rohit", event_id: recapEvent.id, user_id: "u-rohit", status: "attended", created_at: at(-9), attended_at: at(-8) },
+    { id: "pd2-reg-solder-ananya", event_id: "e-solder", user_id: DEMO_USERS.ananya, status: "registered", created_at: at(-3), attended_at: null },
+    { id: "pd2-reg-solder-meera", event_id: "e-solder", user_id: DEMO_USERS.meera, status: "registered", created_at: at(-3), attended_at: null },
+    { id: "pd2-reg-school-ananya", event_id: "e-school", user_id: DEMO_USERS.ananya, status: "registered", created_at: at(-2), attended_at: null },
+    { id: "pd2-reg-recap-ananya", event_id: recapEvent.id, user_id: DEMO_USERS.ananya, status: "attended", created_at: at(-9), attended_at: at(-8) },
+    { id: "pd2-reg-recap-rohit", event_id: recapEvent.id, user_id: DEMO_USERS.rohit, status: "attended", created_at: at(-9), attended_at: at(-8) },
   ];
   for (const r of registrations) {
     add("event_registrations", { event_id: r.event_id, user_id: r.user_id }, r);
@@ -545,7 +652,7 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
     facilities: "Projector, lab benches, power sockets",
     message: "Fictional follow-up request used to demonstrate the in-review school workflow.",
     status: "in_review",
-    owner_id: "u-devika",
+    owner_id: DEMO_USERS.devika,
     internal_notes: "Demo-only: awaiting custodian confirmation on a second kit before scheduling.",
     linked_event_id: null,
     created_at: at(-2),
@@ -555,60 +662,60 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
 
   // ── Hardware movement and allocation ────────────────────────────────────
   const movements = [
-    { id: "pd1-movement-received", item_id: "i-4", kind: "received", quantity_delta: 2, actor_id: "u-ishaan", reason: "Demo workshop kit top-up", created_at: at(-11) },
-    { id: "pd1-movement-resistors", item_id: "i-5", kind: "consumed", quantity_delta: -1, actor_id: "u-ishaan", reason: "LED project build issued to Ananya (demo)", created_at: at(-8) },
-    { id: "pd1-movement-leds", item_id: "i-6", kind: "consumed", quantity_delta: -2, actor_id: "u-ishaan", reason: "LED project build issued to Ananya (demo)", created_at: at(-8) },
-    { id: "pd1-movement-damaged", item_id: "i-7", kind: "damaged", quantity_delta: -1, actor_id: "u-ishaan", reason: "Probe lead worn during a demo check", created_at: at(-3) },
+    { id: "pd2-movement-received", item_id: "i-4", kind: "received", quantity_delta: 2, actor_id: DEMO_USERS.ishaan, reason: "Demo workshop kit top-up", created_at: at(-11) },
+    { id: "pd2-movement-resistors", item_id: "i-5", kind: "consumed", quantity_delta: -1, actor_id: DEMO_USERS.ishaan, reason: "LED project build issued to Ananya (demo)", created_at: at(-8) },
+    { id: "pd2-movement-leds", item_id: "i-6", kind: "consumed", quantity_delta: -2, actor_id: DEMO_USERS.ishaan, reason: "LED project build issued to Ananya (demo)", created_at: at(-8) },
+    { id: "pd2-movement-damaged", item_id: "i-7", kind: "damaged", quantity_delta: -1, actor_id: DEMO_USERS.ishaan, reason: "Probe lead worn during a demo check", created_at: at(-3) },
   ];
   for (const m of movements) add("stock_movements", { id: m.id }, m);
 
   const allocations = [
     {
       id: DEMO_IDS.allocations.resistorKit,
-      item_id: "i-5", quantity: 1, recipient_id: "u-ananya",
+      item_id: "i-5", quantity: 1, recipient_id: DEMO_USERS.ananya,
       recipient_label: "Ananya Baruah — LED indicator project (demo)",
       linked_event_id: null,
       linked_collaboration_id: null,
       linked_project_id: showcaseProject.id,
       issued_at: at(-8), expected_return_at: at(-1), returned_at: at(-2),
       condition_on_issue: "good", condition_on_return: "good",
-      issued_by_id: "u-ishaan", returned_by_id: "u-ishaan",
+      issued_by_id: DEMO_USERS.ishaan, returned_by_id: DEMO_USERS.ishaan,
       notes: "Resistor assortment issued for the demo build; returned with unused values.",
     },
     {
       id: DEMO_IDS.allocations.ledPack,
-      item_id: "i-6", quantity: 2, recipient_id: "u-ananya",
+      item_id: "i-6", quantity: 2, recipient_id: DEMO_USERS.ananya,
       recipient_label: "Ananya Baruah — LED indicator project (demo)",
       linked_event_id: null,
       linked_collaboration_id: null,
       linked_project_id: showcaseProject.id,
       issued_at: at(-8), expected_return_at: at(-1), returned_at: at(-2),
       condition_on_issue: "good", condition_on_return: "good",
-      issued_by_id: "u-ishaan", returned_by_id: "u-ishaan",
+      issued_by_id: DEMO_USERS.ishaan, returned_by_id: DEMO_USERS.ishaan,
       notes: "Two demo LEDs; neither was returned because they were consumed in the build.",
     },
     {
       id: DEMO_IDS.allocations.jumpers,
-      item_id: "i-3", quantity: 2, recipient_id: "u-devika",
+      item_id: "i-3", quantity: 2, recipient_id: DEMO_USERS.devika,
       recipient_label: "School outreach — Riverside (demo)",
       linked_event_id: "e-school",
       linked_collaboration_id: "sr-2",
       linked_project_id: null,
       issued_at: at(-2), expected_return_at: at(22), returned_at: null,
       condition_on_issue: "good", condition_on_return: null,
-      issued_by_id: "u-ishaan", returned_by_id: null,
+      issued_by_id: DEMO_USERS.ishaan, returned_by_id: null,
       notes: "Demo allocation linked to the already-scheduled school request.",
     },
     {
       id: DEMO_IDS.allocations.multimeter,
-      item_id: "i-7", quantity: 1, recipient_id: "u-rohit",
+      item_id: "i-7", quantity: 1, recipient_id: DEMO_USERS.rohit,
       recipient_label: "Rohit Das — motion project measurement (demo)",
       linked_event_id: null,
       linked_collaboration_id: null,
       linked_project_id: approvedProject.id,
       issued_at: at(-5), expected_return_at: at(-3), returned_at: at(-3),
       condition_on_issue: "good", condition_on_return: "fair",
-      issued_by_id: "u-ishaan", returned_by_id: "u-ishaan",
+      issued_by_id: DEMO_USERS.ishaan, returned_by_id: DEMO_USERS.ishaan,
       notes: "Returned with a worn probe lead; matching damage movement recorded.",
     },
   ];
@@ -616,12 +723,12 @@ export function buildDemoDataset(asOf: Date): DemoDataset {
 
   // ── Audit trail ─────────────────────────────────────────────────────────
   const audits = [
-    { id: "pd1-audit-tutor", actor_id: "u-ananya", action: "tutor.session_opened", entity_type: "topic", entity_id: "t-ohm", metadata_json: JSON.stringify({ mode: "step-by-step", level: "beginner" }), created_at: at(-6) },
-    { id: "pd1-audit-submit", actor_id: "u-ananya", action: "project.submitted", entity_type: "project", entity_id: showcaseProject.id, metadata_json: "{}", created_at: at(-4) },
-    { id: "pd1-audit-review", actor_id: "u-kabir", action: "project.reviewed", entity_type: "project", entity_id: showcaseProject.id, metadata_json: JSON.stringify({ decision: "approved" }), created_at: at(-3) },
-    { id: "pd1-audit-issue", actor_id: "u-ishaan", action: "inventory.issued", entity_type: "resource_allocation", entity_id: DEMO_IDS.allocations.resistorKit, metadata_json: JSON.stringify({ quantity: 1 }), created_at: at(-8) },
-    { id: "pd1-audit-request", actor_id: "u-devika", action: "school_request.status_changed", entity_type: "collaboration_request", entity_id: outreachRequest.id, metadata_json: JSON.stringify({ to: "in_review" }), created_at: at(-1) },
-    { id: "pd1-audit-recap", actor_id: "u-devika", action: "event.registration_marked_attended", entity_type: "event", entity_id: recapEvent.id, metadata_json: JSON.stringify({ count: 2 }), created_at: at(-8, 2) },
+    { id: "pd2-audit-tutor", actor_id: DEMO_USERS.ananya, action: "tutor.session_opened", entity_type: "topic", entity_id: "t-ohm", metadata_json: JSON.stringify({ mode: "step-by-step", level: "beginner" }), created_at: at(-6) },
+    { id: "pd2-audit-submit", actor_id: DEMO_USERS.ananya, action: "project.submitted", entity_type: "project", entity_id: showcaseProject.id, metadata_json: "{}", created_at: at(-4) },
+    { id: "pd2-audit-review", actor_id: DEMO_USERS.kabir, action: "project.reviewed", entity_type: "project", entity_id: showcaseProject.id, metadata_json: JSON.stringify({ decision: "approved" }), created_at: at(-3) },
+    { id: "pd2-audit-issue", actor_id: DEMO_USERS.ishaan, action: "inventory.issued", entity_type: "resource_allocation", entity_id: DEMO_IDS.allocations.resistorKit, metadata_json: JSON.stringify({ quantity: 1 }), created_at: at(-8) },
+    { id: "pd2-audit-request", actor_id: DEMO_USERS.devika, action: "school_request.status_changed", entity_type: "collaboration_request", entity_id: outreachRequest.id, metadata_json: JSON.stringify({ to: "in_review" }), created_at: at(-1) },
+    { id: "pd2-audit-recap", actor_id: DEMO_USERS.devika, action: "event.registration_marked_attended", entity_type: "event", entity_id: recapEvent.id, metadata_json: JSON.stringify({ count: 2 }), created_at: at(-8, 2) },
   ];
   for (const e of audits) add("audit_events", { id: e.id }, e);
 

@@ -118,7 +118,7 @@ function requireRow(
   validate?: (row: Record<string, SqlValue>) => boolean,
 ) {
   const row = one<Record<string, SqlValue>>(sqlite, sql, params);
-  if (!row) throw new Error(`Missing baseline demo record: ${description}. Run npm run db:init first.`);
+  if (!row) throw new Error(`Missing baseline catalogue record: ${description}. Stop; do not run db:init on production.`);
   if (validate && !validate(row)) {
     throw new Error(`Baseline demo record changed unexpectedly: ${description}. Refusing to attach demo data to it.`);
   }
@@ -126,10 +126,6 @@ function requireRow(
 
 /** Only attach demo activity to records already marked as demo catalogue. */
 export function assertReferences(sqlite: DB) {
-  for (const ref of REQUIRED_REFERENCES.users) {
-    requireRow(sqlite, "SELECT id, is_demo FROM users WHERE id = ?", [ref.id], `user ${ref.id} (${ref.label})`,
-      (r) => r.is_demo === 1);
-  }
   for (const ref of REQUIRED_REFERENCES.topics) {
     requireRow(sqlite, "SELECT id, title FROM topics WHERE id = ?", [ref.id], `topic ${ref.id}`,
       (r) => r.title === ref.title);

@@ -21,8 +21,8 @@ Everything in this file was executed against this repository. Where something wa
 |---|---|
 Type check (`tsc --noEmit`) | **pass**, 0 errors |
 Production build (`next build`) | **pass**, 27 routes (includes `/api/health`) |
-Automated tests (`npm test`) | **71 / 71 pass** |
-Opt-in demo seed lifecycle (separate DB) | **pass** — 45 inserts, rerun 0 inserts / 45 skipped, 14/14 verify checks, 45 scoped removals |
+Automated tests (`npm test`) | **72 / 72 pass** |
+Opt-in demo seed lifecycle (separate DB) | **pass** — 62 inserts, rerun 0 inserts / 62 skipped, 16/16 verify checks, 62 scoped removals |
 Browser flows (Playwright, Chromium) | **16 / 16 pass** |
 Responsive sweep (13 routes × 5 widths) | **65 / 65 clean** — no overflow, no console errors, no page errors |
 Server-action mutations exercised | **23 / 23 behaved correctly**, including 8 negative cases |
@@ -31,7 +31,7 @@ Authorization (should-redirect) | **6 / 6 correct** |
 
 ---
 
-## 2. Automated tests (71)
+## 2. Automated tests (72)
 
 ### `tests/grading.test.ts` (13)
 - mcq: correct id accepted; wrong id rejected **and** correct label shown; empty response safe

@@ -181,7 +181,7 @@ Why the contract matters: the UI never parses prose, never string-splits, and a 
 
 **What is real:** server-side authorization on every mutation; ownership and assignment checks; validated inputs; scrypt password hashing (OWASP baseline parameters); opaque 256-bit session tokens stored only as SHA-256 digests; httpOnly, `sameSite=lax`, `Secure` cookies in production; session expiry, revocation on password change, and last-seen touch throttling; per-IP and per-account login rate limits; per-IP rate limit on the public collaboration form; CSP and security headers; no secrets in the bundle; no third-party data flows; audit trail for privileged actions; learner records never publicly exposed without two independent gates (approval + consent).
 
-**Demo-only and opt-in:** `AURA_DEMO_MODE` enables fictional identity switching. It is off by default in production and the action refuses to mint a session when disabled. Seeded records remain labelled as demo.
+**Demo-only and opt-in:** `AURA_DEMO_MODE` enables fictional identity switching. It is off by default in production and the action refuses to mint a session when disabled. Seeded records remain labelled as demo. The optional production activity layer adds locked, passwordless `pd2-user-*` identities so fictional workflows never attach to real staff accounts; see [PRODUCTION_DEMO_SEED.md](PRODUCTION_DEMO_SEED.md).
 
 **Remaining production work:**
 1. Institutional SSO (OIDC) behind the existing session layer — no authorization rule changes.

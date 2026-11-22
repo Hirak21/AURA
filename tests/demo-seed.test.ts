@@ -7,6 +7,7 @@ import { IDS } from "../lib/db/seed";
 import {
   DATASET_ID,
   DELETE_ORDER,
+  DEMO_USERS,
   REQUIRED_REFERENCES,
   buildDemoDataset,
 } from "../scripts/demo-dataset";
@@ -46,14 +47,42 @@ test("dataset only writes to tables created by the migration", () => {
   }
 });
 
-test("dataset does not create users or store credentials", () => {
-  assert.equal(dataset.rows.some((r) => r.table === "users"), false);
-  assert.equal(dataset.rows.some((r) => r.table === "user_roles"), false);
+test("dataset creates only locked demo identities and no credentials", () => {
+  const userRows = dataset.rows.filter((r) => r.table === "users");
+  assert.equal(userRows.length, Object.keys(DEMO_USERS).length);
+  assert.equal(dataset.rows.some((r) => r.table === "sessions"), false);
+  assert.equal(dataset.rows.some((r) => r.table === "invites"), false);
+
+  for (const row of userRows) {
+    assert.equal(row.values.is_demo, 1);
+    assert.equal(row.values.status, "active");
+    assert.match(String(row.values.email), /@demo\.aura\.local$/);
+    assert.equal("password_hash" in row.values, false);
+    assert.equal("password_updated_at" in row.values, false);
+  }
   for (const row of dataset.rows) {
     for (const key of Object.keys(row.values)) {
       assert.doesNotMatch(key, /password|secret|token/i);
     }
   }
+});
+
+test("all activity references dataset-owned demo users", () => {
+  const owned = new Set<string>(Object.values(DEMO_USERS));
+  const userColumns = [
+    "user_id", "author_id", "reviewer_id", "owner_id", "actor_id",
+    "recipient_id", "issued_by_id", "returned_by_id", "mentor_id", "student_id",
+  ];
+  let checked = 0;
+  for (const row of dataset.rows) {
+    for (const column of userColumns) {
+      const value = row.values[column];
+      if (value === null || value === undefined) continue;
+      assert.equal(owned.has(String(value)), true, `${row.table}.${column} references ${String(value)}`);
+      checked += 1;
+    }
+  }
+  assert.ok(checked >= 30);
 });
 
 test("tutor content is schema-valid and labelled as demo", () => {
