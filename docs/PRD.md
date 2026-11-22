@@ -254,7 +254,7 @@ Curator reviews topics, outcomes, prerequisites, resource review state, and per-
 
 ## 7. Data model
 
-23 tables. Full DDL in `ARCHITECTURE.md §4` and `lib/db/migrate.ts`. Conceptual shape:
+28 tables. Full DDL in `ARCHITECTURE.md §4` and `lib/db/migrate.ts`. Conceptual shape:
 
 ```
 users ─*─ user_roles                       (many roles per person)
@@ -328,7 +328,7 @@ A judge can complete all of the following with no dead buttons and no unexplaine
 12 | Issue inventory, be blocked from oversubscribing, return | Integration test + server-action test |
 13 | Admin overview reflects the above changes | Manual + metric computation from shared tables |
 
-**Current status: 29 automated tests pass; 16 browser flows pass; 65 viewport checks clean; production build succeeds.**
+**Current status: 63 automated tests pass; 16 browser flows pass; 65 viewport checks clean; production build succeeds.**
 
 ---
 

@@ -24,12 +24,15 @@ npm run dev           # http://localhost:3000
 Then open `/login` and sign in with a demo account. The seeded demo password is `aura-demo-2026` (change `AURA_SEED_PASSWORD` before running `db:init` if the instance is public).
 
 ```bash
-npm test              # 29 tests: grading, adaptation, integrity, structural guards
+npm test              # 63 tests: grading, adaptation, integrity, navigation, security, structural guards
 npm run typecheck
 npm run build && npm start
 npm run db:reset      # wipe + reseed (do this before a demo; seed dates are relative to now)
 npm run user:create -- --email you@gu.ac.in --name "Your Name" --role admin
 npm run db:backup     # consistent online snapshot
+npm run db:seed-catalog # publish catalogue content without touching user accounts
+npm run invite:create -- --email someone@example.com  # issue a signup invite
+npm run invite:list   # list invite status (codes are hashed, not recoverable)
 ```
 
 **Requirements:** Node 22+ (better-sqlite3 13), npm. No external services, no API keys, no network calls at runtime.

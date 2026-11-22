@@ -8,7 +8,7 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: "*",
         allow: "/",
         // Authenticated and operational surfaces must never be indexed.
-        disallow: ["/app", "/admin", "/mentor", "/login", "/api/"],
+        disallow: ["/app", "/admin", "/mentor", "/login", "/signup", "/api/"],
       },
     ],
     sitemap: `${base}/sitemap.xml`,

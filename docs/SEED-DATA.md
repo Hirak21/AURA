@@ -159,7 +159,7 @@ Both use `(demo)` in the school name and fictional contacts.
 
 ## Reset semantics
 
-`npm run db:reset` drops all 23 tables, re-runs the DDL, and reseeds with **fresh relative timestamps**. That means:
+`npm run db:reset` drops all 28 tables, re-runs the DDL, and reseeds with **fresh relative timestamps**. That means:
 
 - events are always in the future,
 - registrations always appear recent,

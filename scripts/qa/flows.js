@@ -1,11 +1,11 @@
 const { chromium } = require('playwright');
-const BASE = 'http://localhost:3001';
+const { BASE, sessionCookies } = require('./session');
 const log = (ok, m) => console.log(`${ok ? 'PASS' : 'FAIL'}  ${m}`);
 
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1280, height: 900 } });
-  await ctx.addCookies([{ name: 'aura_uid', value: 'u-ananya', url: BASE }]);
+  await ctx.addCookies(sessionCookies());
   const page = await ctx.newPage();
   const errs = [];
   page.on('pageerror', (e) => errs.push(e.message));

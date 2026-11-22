@@ -3,6 +3,11 @@
 **File of record:** `lib/domain/adaptation.ts` · **Tests:** `tests/adaptation.test.ts`
 Every rule below is deterministic, requires no model, and produces a human-readable reason plus an evidence list.
 
+> **Implementation status:** the shipped engine implements **six consolidated rules (R1–R6)** in
+> `lib/domain/adaptation.ts`. The eight-row table in §4 is the original design specification;
+> R3/R6 there are merged into the implemented R3, and R7/R8 are covered by the implemented
+> R5/R6. Where they differ, the code and its tests are authoritative.
+
 ---
 
 ## 1. What this system is — and is not

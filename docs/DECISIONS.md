@@ -52,7 +52,7 @@ Format: **D-nn · Decision** — Context → Options → Chosen → Consequences
 
 ## D-06 · Six ordered adaptation rules, each self-explaining
 **Context.** "Adaptive" must be a mechanism, not a claim.
-**Chosen.** R1–R8 in priority order (`docs/ADAPTATION-RULES.md`), each returning a label, a reason in plain language, and 1–4 evidence strings.
+**Chosen.** Six consolidated rules R1–R6 in priority order (`lib/domain/adaptation.ts`, specification in `docs/ADAPTATION-RULES.md`), each returning a label, a reason in plain language, and 1–4 evidence strings.
 **Consequences.** Every recommendation is inspectable and arguable. Determinism is unit-tested. Any new rule needs a test *and* a worked example in the docs.
 **Revisit if.** Pilot data shows which rules actually change behaviour; rules that do not help should be deleted, not tuned.
 
@@ -66,9 +66,9 @@ Format: **D-nn · Decision** — Context → Options → Chosen → Consequences
 
 ---
 
-## D-08 · SQLite for the demo, Postgres for production
-**Context.** The architecture doc suggested Postgres but allowed existing stores.
-**Chosen.** SQLite via `better-sqlite3` with WAL and `foreign_keys = ON`. Drizzle keeps the schema portable.
+## D-08 · SQLite for the demo and production
+**Context.** The architecture doc suggested Postgres but allowed existing stores. A single-instance deployment is a deliberate constraint, not an accident.
+**Chosen.** SQLite via `better-sqlite3` with WAL and `foreign_keys = ON` in every environment. Drizzle keeps the schema portable.
 **Consequences.** Zero-setup, genuinely transactional (the inventory and capacity guarantees are real), single-file reset. Not multi-instance. Service code is dialect-neutral; only the client factory changes for Postgres.
 **Revisit if.** Concurrency or multi-tenancy enters scope.
 

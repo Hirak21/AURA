@@ -16,6 +16,9 @@ data/
 .env.*.local
 .env.production
 
+# QA artefacts (may contain session evidence)
+scripts/qa/screenshots/
+
 # Tooling
 *.tsbuildinfo
 .DS_Store

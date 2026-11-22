@@ -1,10 +1,11 @@
 const { chromium } = require('playwright');
+const { BASE, sessionCookies } = require('./session');
 (async () => {
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 360, height: 900 } });
-  await ctx.addCookies([{ name: 'aura_uid', value: 'u-jyoti', url: 'http://localhost:3001' }]);
+  await ctx.addCookies(sessionCookies());
   const p = await ctx.newPage();
-  await p.goto('http://localhost:3001/admin', { waitUntil: 'domcontentloaded' });
+  await p.goto(`${BASE}/admin`, { waitUntil: 'domcontentloaded' });
   const info = await p.evaluate(() => {
     const vw = document.documentElement.clientWidth;
     return [...document.querySelectorAll('body *')].filter(el => {

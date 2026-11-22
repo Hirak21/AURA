@@ -16,7 +16,7 @@ export default function CollaboratePage() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-public gap-12 px-5 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:px-8 lg:py-20">
+      <main id="main" className="mx-auto grid max-w-public gap-12 px-5 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:px-8 lg:py-20">
         <div>
           <p className="eyebrow accent-text">School collaboration</p>
           <h1 className="h-serif mt-3 text-[32px] font-semibold leading-[1.08] sm:text-[40px]">

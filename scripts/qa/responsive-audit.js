@@ -1,19 +1,25 @@
 const { chromium } = require('playwright');
-const BASE = 'http://localhost:3001';
+const fs = require('node:fs');
+const path = require('node:path');
+const { BASE, sessionCookies } = require('./session');
+const SHOTS = path.join(__dirname, 'screenshots');
+fs.mkdirSync(SHOTS, { recursive: true });
 const WIDTHS = [360, 390, 768, 1024, 1440];
 
+// `auth: true` marks a route that must not redirect to /login. One session
+// token is used throughout; use an admin token so every workspace is reachable.
 const PAGES = [
   { path: '/', name: 'landing' },
   { path: '/learn', name: 'learn' },
   { path: '/learn/t-ohm', name: 'topic' },
-  { path: '/app', name: 'overview', cookie: 'u-ananya' },
-  { path: '/app/tutor/t-ohm', name: 'tutor', cookie: 'u-ananya' },
-  { path: '/app/practice', name: 'practice', cookie: 'u-ananya' },
-  { path: '/app/projects', name: 'projects', cookie: 'u-ananya' },
-  { path: '/mentor', name: 'mentor', cookie: 'u-kabir' },
-  { path: '/admin', name: 'admin', cookie: 'u-jyoti' },
-  { path: '/admin/inventory', name: 'inventory', cookie: 'u-jyoti' },
-  { path: '/admin/schools', name: 'schools', cookie: 'u-jyoti' },
+  { path: '/app', name: 'overview', auth: true },
+  { path: '/app/tutor/t-ohm', name: 'tutor', auth: true },
+  { path: '/app/practice', name: 'practice', auth: true },
+  { path: '/app/projects', name: 'projects', auth: true },
+  { path: '/mentor', name: 'mentor', auth: true },
+  { path: '/admin', name: 'admin', auth: true },
+  { path: '/admin/inventory', name: 'inventory', auth: true },
+  { path: '/admin/schools', name: 'schools', auth: true },
   { path: '/events', name: 'events' },
   { path: '/collaborate', name: 'collaborate' },
 ];
@@ -26,9 +32,7 @@ const PAGES = [
   for (const p of PAGES) {
     for (const w of WIDTHS) {
       const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
-      if (p.cookie) {
-        await ctx.addCookies([{ name: 'aura_uid', value: p.cookie, url: BASE }]);
-      }
+      if (p.auth) await ctx.addCookies(sessionCookies());
       const page = await ctx.newPage();
       page.on('console', (m) => {
         if (m.type() === 'error') consoleErrors.push(`${p.name}@${w}: ${m.text().slice(0, 160)}`);
@@ -36,6 +40,10 @@ const PAGES = [
       page.on('pageerror', (e) => consoleErrors.push(`${p.name}@${w}: PAGEERROR ${e.message.slice(0, 160)}`));
       const res = await page.goto(BASE + p.path, { waitUntil: 'domcontentloaded', timeout: 60000 });
       if (res.status() !== 200) failures.push(`HTTP ${res.status()} ${p.path}@${w}`);
+      // A stale/invalid session used to 307 to /login but still read as 200.
+      if (p.auth && new URL(page.url()).pathname === '/login') {
+        failures.push(`AUTH REDIRECT ${p.path}@${w} — session cookie rejected`);
+      }
 
       const m = await page.evaluate(() => {
         const de = document.documentElement;
@@ -61,10 +69,10 @@ const PAGES = [
       if (m.h1 > 1) failures.push(`MULTIPLE-H1(${m.h1}) ${p.name}@${w}`);
 
       if (w === 390 && ['landing','overview','tutor','admin','inventory','learn'].includes(p.name)) {
-        await page.screenshot({ path: `/home/user/shots/${p.name}-390.png`, fullPage: false });
+        await page.screenshot({ path: path.join(SHOTS, `${p.name}-390.png`), fullPage: false });
       }
       if (w === 1440 && ['landing','overview','tutor','admin','inventory','learn','mentor','schools'].includes(p.name)) {
-        await page.screenshot({ path: `/home/user/shots/${p.name}-1440.png`, fullPage: false });
+        await page.screenshot({ path: path.join(SHOTS, `${p.name}-1440.png`), fullPage: false });
       }
       await ctx.close();
     }

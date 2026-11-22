@@ -8,7 +8,7 @@ export const metadata = { title: "Create account" };
 
 export default function SignupPage() {
   return (
-    <div className="mx-auto flex min-h-dvh max-w-6xl flex-col px-5 py-8 lg:px-8">
+    <div id="main" className="mx-auto flex min-h-dvh max-w-6xl flex-col px-5 py-8 lg:px-8">
       <header className="flex items-center justify-between gap-4">
         <Wordmark />
         <p className="hidden font-mono text-[10px] uppercase tracking-[0.16em] text-mid sm:block">

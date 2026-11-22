@@ -4,6 +4,15 @@
 
 Everything in this file was executed against this repository. Where something was **not** verified, it says so — that is the point of the document.
 
+> **Verification status (22 November 2026):** the automated-test, type-check, build, HTTP-route
+> and authorization rows below were re-verified against the current build. The Playwright browser
+> flows, responsive sweep and server-action mutation results in §§3–5 are **historical manual
+> results** from build v3.0: the committed scripts in `scripts/qa/` used an obsolete `aura_uid`
+> cookie and port 3001, so they cannot currently reproduce those numbers unattended. The current
+> live build was instead verified with headless Chromium driving real `aura_session` cookies —
+> role routing, mobile nav at 390/320 px, open-redirect rejection and the 17-route role matrix
+> all passed. See `tasks/todo.md` for the current increment.
+
 ---
 
 ## 1. Summary
@@ -12,7 +21,7 @@ Everything in this file was executed against this repository. Where something wa
 |---|---|
 Type check (`tsc --noEmit`) | **pass**, 0 errors |
 Production build (`next build`) | **pass**, 26 routes |
-Automated tests (`npm test`) | **29 / 29 pass** |
+Automated tests (`npm test`) | **63 / 63 pass** |
 Browser flows (Playwright, Chromium) | **16 / 16 pass** |
 Responsive sweep (13 routes × 5 widths) | **65 / 65 clean** — no overflow, no console errors, no page errors |
 Server-action mutations exercised | **23 / 23 behaved correctly**, including 8 negative cases |
@@ -21,7 +30,7 @@ Authorization (should-redirect) | **6 / 6 correct** |
 
 ---
 
-## 2. Automated tests (29)
+## 2. Automated tests (63)
 
 ### `tests/grading.test.ts` (13)
 - mcq: correct id accepted; wrong id rejected **and** correct label shown; empty response safe
@@ -168,7 +177,7 @@ Checked programmatically on every combination:
 
 ```bash
 npm run db:reset        # wipe + reseed; timestamps are relative to now
-npm test                # expect 29/29
+npm test                # expect 63/63
 npm run typecheck
 npm run build           # expect success
 npm start               # port 3000

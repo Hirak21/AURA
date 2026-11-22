@@ -85,6 +85,6 @@ The code is already structured for it: Drizzle owns the schema, services read th
 3. Translate the DDL in `lib/db/migrate.ts` to Postgres types (`TEXT` → `text`, `INTEGER` booleans → `boolean`, `REAL` → `double precision`), or adopt `drizzle-kit` migrations.
 4. Move the session/rate-limit store to a shared backend (Redis) when running more than one instance.
 5. Export/import existing rows (`sqlite3 .mode insert` or a small script), then verify counts and foreign keys.
-6. Run both stacks against a staging copy, compare the 29 tests and the main journeys, then cut over during a maintenance window with a final snapshot.
+6. Run both stacks against a staging copy, compare the 63 tests and the main journeys, then cut over during a maintenance window with a final snapshot.
 
 Until then, SQLite is not a placeholder in this project: it is the production database, with the operational rules above.
