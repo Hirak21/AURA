@@ -2,7 +2,7 @@
 
 This runbook covers the **opt-in demo activity layer** for a deployed AURA instance. It is intentionally separate from `npm run db:init` / `npm run db:reset`: those commands create or replace the whole database and must never be used against production.
 
-> **Status (23 November 2026):** the v2 dataset and its local lifecycle pass on a separate SQLite file. On the live instance at `https://aura-os.duckdns.org/` a pre-change backup was taken, the code was deployed, `db:migrate` ran, and the v1 dry-run correctly refused because production has no baseline demo accounts. The operator then approved **locked demo identities**; the v2 apply is the final step recorded below.
+> **Status (23 November 2026): APPLIED to production.** The v2 dataset and its local lifecycle passed on a separate SQLite file. On the live instance at `https://aura-os.duckdns.org/` a pre-change backup was taken, the code was deployed, `db:migrate` ran, and the v1 dry-run correctly refused because production has no baseline demo accounts. The operator approved **locked demo identities**; v2 was applied in one transaction and `npm run demo:verify` reported **16/16 checks passed**. A post-apply dry-run is a no-op (0 inserts, 62 skipped).
 
 ---
 
@@ -229,7 +229,8 @@ If removal is blocked by a genuine foreign key, the transaction rolls back. Rest
 ## 9. Honest boundaries
 
 - The live instance was reached with deployment credentials already present in this workspace; no credentials are stored in the repository or seed files.
-- The pre-change backup is `/home/aura/aura/shared/backups/aura-2026-11-22_19-25-24.db` on the VPS.
-- No real account, session, role, topic, question, challenge or inventory record is changed.
+- Backups on the VPS: pre-change `/home/aura/aura/shared/backups/aura-2026-11-22_19-25-24.db`; pre-apply `/home/aura/aura/shared/backups/aura-2026-11-22_19-38-13.db`.
+- Applied with anchor `2026-11-23T10:00:00.000Z`. Post-apply counts: 4 real users, 6 demo users, 27 sessions, 0 demo sessions, 1 manifest, 0 foreign-key violations.
+- No real account, session, role, topic, question, challenge or inventory record was changed. Public `/projects` shows only the consented showcase project.
 - This dataset does not add live AI, institutional SSO, new topics, new content, new permissions for real users, or new application features.
 - SQLite remains single-instance; run one Node process and keep the scheduled backups described in [DATABASE.md](DATABASE.md).

@@ -23,6 +23,7 @@ Type check (`tsc --noEmit`) | **pass**, 0 errors |
 Production build (`next build`) | **pass**, 27 routes (includes `/api/health`) |
 Automated tests (`npm test`) | **72 / 72 pass** |
 Opt-in demo seed lifecycle (separate DB) | **pass** — 62 inserts, rerun 0 inserts / 62 skipped, 16/16 verify checks, 62 scoped removals |
+Production demo v2 apply | **pass** — 62 rows applied, 16/16 verify checks, post-apply dry-run 0 inserts / 62 skipped, 4 real users and 27 sessions unchanged, 0 demo sessions, public showcase only |
 Browser flows (Playwright, Chromium) | **16 / 16 pass** |
 Responsive sweep (13 routes × 5 widths) | **65 / 65 clean** — no overflow, no console errors, no page errors |
 Server-action mutations exercised | **23 / 23 behaved correctly**, including 8 negative cases |
